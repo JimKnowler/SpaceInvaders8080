@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Disassemble8080", "Disassemble8080.vcxproj", "{248BFB40-60ED-41D5-A9AE-8DD6F64630EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{248BFB40-60ED-41D5-A9AE-8DD6F64630EA}.Debug|x64.ActiveCfg = Debug|x64
+		{248BFB40-60ED-41D5-A9AE-8DD6F64630EA}.Debug|x64.Build.0 = Debug|x64
+		{248BFB40-60ED-41D5-A9AE-8DD6F64630EA}.Debug|x86.ActiveCfg = Debug|Win32
+		{248BFB40-60ED-41D5-A9AE-8DD6F64630EA}.Debug|x86.Build.0 = Debug|Win32
+		{248BFB40-60ED-41D5-A9AE-8DD6F64630EA}.Release|x64.ActiveCfg = Release|x64
+		{248BFB40-60ED-41D5-A9AE-8DD6F64630EA}.Release|x64.Build.0 = Release|x64
+		{248BFB40-60ED-41D5-A9AE-8DD6F64630EA}.Release|x86.ActiveCfg = Release|Win32
+		{248BFB40-60ED-41D5-A9AE-8DD6F64630EA}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EFA2AA60-E0C5-458B-86DE-588F775E2C92}
+	EndGlobalSection
+EndGlobal
