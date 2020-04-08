@@ -4,6 +4,9 @@
 #include <cassert>
 
 #include "Disassemble8080.h"
+#include "Emulator8080.h"
+
+//#define ENABLE_DISASSEMBLER
 
 bool loadBinaryFile(const char* filename, std::vector<uint8_t>& outData) {
     std::cout << "Loading " << filename << "\n";
@@ -24,17 +27,10 @@ bool loadBinaryFile(const char* filename, std::vector<uint8_t>& outData) {
     return true;
 }
 
-int main()
-{
-    const char* filename = "./roms/spaceinvaders/invaders.concatenated";
-
-    std::vector<uint8_t> data;
-
-    loadBinaryFile(filename, data);
-
+void disassemble(std::vector<uint8_t>& data, uint16_t inPc) {
     uint8_t* ptr = &(data.front());
     size_t codeSize = data.size();
-    size_t pc = 0;
+    size_t pc = size_t(inPc);
 
     while (pc < codeSize) {
         std::string opcode;
@@ -44,3 +40,36 @@ int main()
         pc += numBytes;
     }
 }
+
+void emulate(std::vector<uint8_t>& data, uint16_t pc) {
+    Emulator8080 emulator;
+    uint8_t* ptr = &(data.front());
+    emulator.init(ptr, data.size(), 0);
+
+    uint32_t step = 0;
+    while (true) {
+        emulator.step();
+
+        step += 1;
+    }
+}
+
+int main()
+{
+    const char* filename = "./roms/spaceinvaders/invaders.concatenated";
+
+    std::vector<uint8_t> data;
+
+    loadBinaryFile(filename, data);
+
+    uint16_t pc = 0;
+
+#ifdef ENABLE_DISASSEMBLER
+    disassemble(data, pc);
+#endif
+
+    emulate(data, pc);
+
+    return 0;
+}
+

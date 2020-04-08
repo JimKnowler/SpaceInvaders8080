@@ -21,9 +21,15 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Emulator8080.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Disassemble8080.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Emulator8080.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
