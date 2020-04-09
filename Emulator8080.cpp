@@ -21,23 +21,36 @@ namespace {
 }
 
 Emulator8080::Emulator8080() {
-	memset(&cc, sizeof(ConditionCodes), 0);
 	memset(&state, sizeof(State), 0);
 	rom = 0;
 	romSize = 0;
 	interuptsEnabled = false;
 
 	work.resize(0x400, 0);
-	video.resize(0x1c00, 0);
+	video.resize(0x1c00, 0);	
+
+	numSteps = 0;
 }
 
 void Emulator8080::init(uint8_t* inRom, size_t inRomSize, uint16_t inPc) {
 	rom = inRom;
 	romSize = inRomSize;
 	state.pc = inPc;
+
+	numSteps = 0;
+}
+
+uint64_t Emulator8080::getNumSteps() const {
+	return numSteps;
+}
+
+const Emulator8080::State& Emulator8080::getState() const {
+	return state;
 }
 
 void Emulator8080::step() {
+	numSteps += 1;
+
 	uint8_t* opcode = rom + state.pc;
 	
 	size_t opcodeSize = 1;
@@ -103,7 +116,7 @@ void Emulator8080::step() {
 			uint8_t bit0 = state.a & 0x01;
 			state.a >>= 1;
 			state.a |= (bit0 << 7);
-			cc.cy = bit0;
+			state.cc.cy = bit0;
 			break;
 		}
 
@@ -306,7 +319,7 @@ void Emulator8080::step() {
 		}
 		case 0xC2:						// JNZ adr
 		{
-			if (!cc.z) {
+			if (!state.cc.z) {
 				uint16_t address = readOpcodeD16(opcode);
 				state.pc = address;
 				return;
@@ -429,7 +442,7 @@ void Emulator8080::step() {
 
 		case 0xF5:						// PUSH PSW
 		{
-			writeMemory(state.sp - 2, *reinterpret_cast<uint8_t*>(&cc));
+			writeMemory(state.sp - 2, *reinterpret_cast<uint8_t*>(&state.cc));
 			writeMemory(state.sp - 1, state.a);
 			state.sp -= 2;
 			break;
@@ -456,15 +469,15 @@ void Emulator8080::step() {
 }
 
 void Emulator8080::updateZSP(uint16_t answer) {
-	cc.z = ((answer & 0xff) == 0);
-	cc.s = ((answer & 0x80) != 0);	
-	cc.p = parity(answer & 0xff);
+	state.cc.z = ((answer & 0xff) == 0);
+	state.cc.s = ((answer & 0x80) != 0);	
+	state.cc.p = parity(answer & 0xff);
 
 	// ac (auxilliary carry) not implemented - not required for space invaders
 }
 
 void Emulator8080::updateCY(uint16_t value) {
-	cc.cy = (value > 0xff);
+	state.cc.cy = (value > 0xff);
 }
 
 size_t Emulator8080::unimplementedOpcode(uint16_t pc) {

@@ -13,18 +13,8 @@ public:
     // step through an instruction at current address in pc
     void step();
 
-private:
-    void updateZSP(uint16_t answer);
-    void updateCY(uint16_t value);
-    size_t unimplementedOpcode(uint16_t pc);
-    uint16_t readOpcodeD16(uint8_t* opcode);
-    void writeMemory(uint16_t address, uint8_t value);
-    uint8_t readMemory(uint16_t address);
-    uint16_t getDE();
-    void setDE(uint16_t value);
-    uint16_t getHL();
-    void setHL(uint16_t value);
-    uint16_t getBC();
+    // get the number of steps that have been simulated so far
+    uint64_t getNumSteps() const;
 
     struct ConditionCodes {
         uint8_t    z : 1;
@@ -45,14 +35,35 @@ private:
         uint8_t     l;
         uint16_t    sp;
         uint16_t    pc;
+
+        ConditionCodes cc;
     };
 
+    // get the current state of the CPU
+    const State& getState() const;
+
+private:
+    void updateZSP(uint16_t answer);
+    void updateCY(uint16_t value);
+    size_t unimplementedOpcode(uint16_t pc);
+    uint16_t readOpcodeD16(uint8_t* opcode);
+    void writeMemory(uint16_t address, uint8_t value);
+    uint8_t readMemory(uint16_t address);
+    uint16_t getDE();
+    void setDE(uint16_t value);
+    uint16_t getHL();
+    void setHL(uint16_t value);
+    uint16_t getBC();
+
+    
     State           state;
-    ConditionCodes  cc;
+    
     uint8_t*        rom;  
     size_t          romSize;
     bool            interuptsEnabled;
 
     std::vector<uint8_t> work;
     std::vector<uint8_t> video;
+
+    uint64_t        numSteps;
 };

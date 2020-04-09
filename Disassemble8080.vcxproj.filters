@@ -32,5 +32,11 @@
     <ClInclude Include="Emulator8080.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="olcPGEX_Gamepad.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="olcPixelGameEngine.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

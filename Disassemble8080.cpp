@@ -49,8 +49,8 @@ namespace {
 
 namespace Disassemble8080 {
 
-    size_t dissassembleOpcode(uint8_t* code, std::string& outOpcode) {
-        size_t numBytes = 1;
+    uint16_t dissassembleOpcode(uint8_t* code, std::string& outOpcode) {
+        uint16_t numBytes = 1;
 
         switch (*code) {
         case 0x00:
