@@ -36,7 +36,7 @@ public:
 
         emulator.init(&(rom.front()), rom.size(), pc);
 
-        step(40020);
+        step(50000);
 
         return true;
     }
@@ -44,8 +44,19 @@ public:
     bool OnUserUpdate(float fElapsedTime) override {
         // update
         if (GetKey(olc::SPACE).bReleased) { 
-            step();            
+            if (GetKey(olc::SHIFT).bHeld) {
+                if (GetKey(olc::CTRL).bHeld) {
+                    step(100);
+                }
+                else {
+                    step(10);
+                }
+            }
+            else {
+                step(1);
+            }
         }
+
 
         // render
         FillRect({ 0,0 }, { ScreenWidth(), ScreenHeight() }, olc::BLUE);
@@ -98,8 +109,8 @@ private:
             FormatBuffer("  bc: 0x%02x%02x", state.b, state.c),
             FormatBuffer("  de: 0x%02x%02x", state.d, state.e),
             FormatBuffer("  hl: 0x%02x%02x", state.h, state.l),
-            FormatBuffer("  sp: 0x%04x", state.sp),
             FormatBuffer("  pc: 0x%04x", state.pc),
+            FormatBuffer("  sp: 0x%04x", state.sp),
             FormatBuffer("   z: %u", state.cc.z),
             FormatBuffer("   s: %u", state.cc.s),
             FormatBuffer("   p: %u", state.cc.p),
@@ -137,7 +148,7 @@ private:
         DrawString({ x, y }, FormatBuffer("Memory (%s)", label));
 
         // 4 byte alignment
-        address &= 3;
+        address &= ~3;
 
         y += 10;
         for (int i = 0; i < 8; i++) {
