@@ -99,6 +99,14 @@ void Emulator8080::step() {
 			break;
 		}
 
+		case 0x13:						// INX D
+		{
+			uint16_t value = getDE();
+			value += 1;
+			setDE(value);
+			break;
+		}
+
 		case 0x19:						// DAD D
 		{
 			uint16_t de = getDE();
@@ -106,16 +114,6 @@ void Emulator8080::step() {
 			uint16_t value = hl + de;
 			updateCY(value);
 			setHL(value);
-			break;
-		}
-
-		case 0x13:						// INX D
-		{
-			uint16_t value = getDE();
-			value += 1;
-			setDE(value);
-
-			opcodeSize = 3;
 			break;
 		}
 
@@ -432,7 +430,7 @@ size_t Emulator8080::unimplementedOpcode(uint16_t pc) {
 	size_t numBytes = Disassemble8080::dissassembleOpcode(opcode, strOpcode);
 
 	
-	printf("Unsupported Instruction: %04x 0x%02x %s\n", pc, *opcode, strOpcode.c_str());
+	printf("unimplemented Instruction: %04x 0x%02x %s\n", pc, *opcode, strOpcode.c_str());
 	
 	return numBytes;
 }
