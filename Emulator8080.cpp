@@ -418,20 +418,77 @@ void Emulator8080::step() {
 			state.sp += 2;
 			return;
 		}
+		case 0xCA:						// JZ adr
+		{
+			if (state.cc.z != 0) {
+				uint16_t address = readOpcodeD16(opcode);
+				state.pc = address;
+				return;
+			} else {
+				opcodeSize = 3;
+				break;
+			}
+		}
 
 		case 0xCD:						// CALL adr
 		{
-			uint16_t ret = state.pc + 3;
-			uint8_t rethi = uint8_t((ret >> 8) & 0xff);
-			uint8_t retlo = uint8_t(ret & 0xff);
-			writeMemory(state.sp - 1, rethi);
-			writeMemory(state.sp - 2, retlo);
-			state.sp = state.sp - 2;
 
 			uint16_t address = readOpcodeD16(opcode);
-			state.pc = address;
+#if 1    
+			if (5 == address)
+			{
+				if (state.c == 9)
+				{
+					uint16_t offset = getDE();
+
+					offset += 3;		// skip prefix bytes
+
+					uint8_t c = readMemory(offset);
+					while (c != '$') {
+						printf("%c", c);
+						offset += 1;
+						c = readMemory(offset);
+					}
+
+					printf("\n");
+				}
+				else if (state.c == 2)
+				{
+					//saw this in the inspected code, never saw it called    
+					printf("print char routine called\n");
+				}
+			}
+			else if (0 == address)
+			{
+				exit(0);
+			}
+			else
+#endif  
+			{
+				uint16_t ret = state.pc + 3;
+				uint8_t rethi = uint8_t((ret >> 8) & 0xff);
+				uint8_t retlo = uint8_t(ret & 0xff);
+				writeMemory(state.sp - 1, rethi);
+				writeMemory(state.sp - 2, retlo);
+				state.sp = state.sp - 2;
+
+				state.pc = address;
+			}
 
 			return;
+		}
+
+		case 0xCE:						// ACI D8
+		{
+			uint16_t value = state.a;
+			value += uint16_t(opcode[1]);
+			value += uint16_t(state.cc.cy);
+			updateCY(value);
+			updateZSP(value);
+			state.a = value;
+
+			opcodeSize = 2;
+			break;
 		}
 
 		case 0xD1:						// POP D
@@ -441,7 +498,18 @@ void Emulator8080::step() {
 			state.sp += 2;
 			break;
 		}
-
+		case 0xD2:						// JNC adr
+		{
+			if (!state.cc.cy) {
+				uint16_t address = readOpcodeD16(opcode);
+				state.pc = address;
+				return;
+			}
+			else {
+				opcodeSize = 3;
+				break;
+			}
+		}
 		case 0xD3:						// OUT D8 (special)
 		{
 			uint8_t data = opcode[1];
@@ -457,12 +525,61 @@ void Emulator8080::step() {
 			state.sp -= 2;
 			break;
 		}
+		case 0xD6:						// SUI D8
+		{
+			uint8_t data = opcode[1];
+			uint16_t value = uint16_t(state.a) - uint16_t(data);
+			updateCY(value);
+			updateZSP(value);
+			state.a = uint8_t(value & 0xff);
+
+			opcodeSize = 2;
+			break;
+		}
+
+		case 0xDA:						// JC addr
+		{
+			if (state.cc.cy == 1) {
+				uint16_t address = readOpcodeD16(opcode);
+				state.pc = address;
+				return;
+			}
+			else {
+				opcodeSize = 3;
+				break;
+			}
+			break;
+		}
+
+		case 0xDE:						// SBI D8
+		{
+			uint8_t data = opcode[1];
+			uint16_t value = uint16_t(state.a) - uint16_t(data) - uint16_t(state.cc.cy);
+			updateCY(value);
+			updateZSP(value);
+			state.a = uint8_t(value & 0xff);
+
+			opcodeSize = 2;
+		}
 
 		case 0xE1:						// POP H
 		{
 			state.l = readMemory(state.sp);
 			state.h = readMemory(state.sp + 1);
 			state.sp += 2;
+			break;
+		}
+		case 0xE2:						// JPO
+		{
+			if (state.cc.p == 0) {
+				uint16_t address = readOpcodeD16(opcode);
+				state.pc = address;
+				return;
+			}
+			else {
+				opcodeSize = 3;
+				break;
+			}
 			break;
 		}
 
@@ -483,6 +600,18 @@ void Emulator8080::step() {
 			break;
 		}
 
+		case 0xEA:						// JPE adr
+		{
+			if (state.cc.p == 1) {
+				uint16_t address = readOpcodeD16(opcode);
+				state.pc = address;
+				return;
+			}
+			else {
+				opcodeSize = 3;
+				break;
+			}
+		}
 		case 0xEB:						// XCHG
 		{
 			swap(state.h, state.d);
@@ -497,6 +626,19 @@ void Emulator8080::step() {
 			state.a = readMemory(state.sp + 1);
 			state.sp += 2;
 
+			break;
+		}
+		case 0xF2:						// JP
+		{
+			if (state.cc.s == 0) {
+				uint16_t address = readOpcodeD16(opcode);
+				state.pc = address;
+				return;
+			}
+			else {
+				opcodeSize = 3;
+				break;
+			}
 			break;
 		}
 
@@ -515,6 +657,19 @@ void Emulator8080::step() {
 			break;
 		}
 
+		case 0xFA:						// JM
+		{
+			if (state.cc.s == 1) {
+				uint16_t address = readOpcodeD16(opcode);
+				state.pc = address;
+				return;
+			}
+			else {
+				opcodeSize = 3;
+				break;
+			}
+			break;
+		}
 		case 0xFB:						// EI
 		{
 			interuptsEnabled = true;
@@ -583,12 +738,12 @@ void Emulator8080::writeMemory(uint16_t address, uint8_t value) {
 		address -= 0x2000;
 	}
 
-	assert(address >= 0x2000);
+	assert(address >= romSize);
 	assert(address <= 0x3fff);
 
 	if (address < 0x2400) {
 		// work RAM
-		uint16_t workAddress = address - 0x2000;
+		uint16_t workAddress = address - romSize;
 		work[workAddress] = value;
 	}
 	else {
@@ -612,7 +767,7 @@ uint8_t Emulator8080::readMemory(uint16_t address) const {
 
 	if (address < 0x2400) {
 		// work RAM
-		uint16_t workAddress = address - 0x2000;
+		uint16_t workAddress = address - romSize;
 		
 		return work[workAddress];
 	}

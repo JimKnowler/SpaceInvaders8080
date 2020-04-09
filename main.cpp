@@ -18,7 +18,13 @@ namespace {
     const uint32_t kScreenWidth = 800;
     const uint32_t kScreenHeight = 600;
 
+#if 0
     const char* kRomFilename = "./roms/spaceinvaders/invaders.concatenated";
+    const uint16_t kRomLoadAddress = 0;
+#else 
+    const char* kRomFilename = "./roms/cpudiag.bin";
+    const uint16_t kRomLoadAddress = 0x100;
+#endif
 }
 
 class SpaceInvaders : public olc::PixelGameEngine
@@ -32,11 +38,18 @@ public:
         // called once at start
 
         loadBinaryFile(kRomFilename, rom);
-        uint16_t pc = 0;
+        uint16_t pc = kRomLoadAddress;
+
+        if (pc > 0) {
+            // prepend buffer
+            std::vector<uint8_t> prepend;
+            prepend.resize(pc, 0xfa);
+            rom.insert(rom.begin(), prepend.begin(), prepend.end());
+        }
 
         emulator.init(&(rom.front()), rom.size(), pc);
 
-        step(50000);
+        step(100000);
 
         return true;
     }
@@ -191,29 +204,6 @@ private:
     Emulator8080 emulator;
 
 };
-
-#if 0
-int main()
-{
-    const char* filename = "./roms/spaceinvaders/invaders.concatenated";
-
-    std::vector<uint8_t> data;
-
-    loadBinaryFile(filename, data);
-
-    uint16_t pc = 0;
-
-#ifdef ENABLE_DISASSEMBLER
-    disassemble(data, pc);
-#endif
-
-    emulate(data, pc);
-
-    return 0;
-}
-#endif
-
-
 
 int main()
 {
