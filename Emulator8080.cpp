@@ -84,10 +84,26 @@ void Emulator8080::step() {
 			break;
 		}
 
+		case 0x0D:						// DCR C
+		{
+			uint16_t value = uint16_t(state.c);
+			value -= 1;
+			updateZSP(value);
+			state.c = uint8_t(value & 0xff);
+			break;
+		}
 		case 0x0E:						// MVI C, D8
 		{
 			state.c = opcode[1];
 			opcodeSize = 2;
+			break;
+		}
+		case 0x0F:						// RRC
+		{
+			uint8_t bit0 = state.a & 0x01;
+			state.a >>= 1;
+			state.a |= (bit0 << 7);
+			cc.cy = bit0;
 			break;
 		}
 
@@ -225,6 +241,13 @@ void Emulator8080::step() {
 			break;
 		}
 
+		case 0x66:						// MOV H, M
+		{
+			uint16_t address = getHL();
+			state.h = readMemory(address);
+			break;
+		}
+
 		case 0x6F:						// MOV L, A
 		{
 			state.l = state.a;
@@ -235,6 +258,12 @@ void Emulator8080::step() {
 		{
 			uint16_t address = getHL();
 			writeMemory(address, state.c);
+			break;
+		}
+
+		case 0x7A:						// MOV A, D
+		{
+			state.a = state.d;
 			break;
 		}
 		
@@ -344,7 +373,7 @@ void Emulator8080::step() {
 			break;
 		}
 
-		case 0xD3:						// OUT D8
+		case 0xD3:						// OUT D8 (special)
 		{
 			uint8_t data = opcode[1];
 			printf("OUT 0x%02x\n", data);
@@ -375,6 +404,15 @@ void Emulator8080::step() {
 			state.sp -= 2;
 			break;
 		}
+		case 0xE6:						// ANI D8
+		{
+			uint16_t value = uint16_t(state.a) & uint16_t(opcode[1]);
+			updateZSP(value);
+			updateCY(value);
+			state.a = uint8_t(value & 0xff);
+			opcodeSize = 2;
+			break;
+		}
 
 		case 0xEB:						// XCHG
 		{
@@ -383,9 +421,17 @@ void Emulator8080::step() {
 			break;
 		}
 
-		case 0xF3:						// DI
+		case 0xF3:						// DI (special)
 		{
 			printf("DI\n");
+			break;
+		}
+
+		case 0xF5:						// PUSH PSW
+		{
+			writeMemory(state.sp - 2, *reinterpret_cast<uint8_t*>(&cc));
+			writeMemory(state.sp - 1, state.a);
+			state.sp -= 2;
 			break;
 		}
 
@@ -443,6 +489,7 @@ uint16_t Emulator8080::readOpcodeD16(uint8_t* opcode) {
 
 void Emulator8080::writeMemory(uint16_t address, uint8_t value) {
 	while (address > 0x4000) {
+		// handle mirroring of RAM above 0x4000
 		address -= 0x2000;
 	}
 
@@ -462,6 +509,11 @@ void Emulator8080::writeMemory(uint16_t address, uint8_t value) {
 }
 
 uint8_t Emulator8080::readMemory(uint16_t address) {
+	while (address > 0x4000) {
+		// handle mirroring of RAM above 0x4000
+		address -= 0x2000;
+	}
+
 	assert(address <= 0x3fff);
 
 	if (address < romSize) {
