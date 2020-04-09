@@ -522,7 +522,7 @@ void Emulator8080::writeMemory(uint16_t address, uint8_t value) {
 }
 
 uint8_t Emulator8080::readMemory(uint16_t address) const {
-	while (address > 0x4000) {
+	while (address >= 0x4000) {
 		// handle mirroring of RAM above 0x4000
 		address -= 0x2000;
 	}
