@@ -57,6 +57,7 @@ public:
 private:
     void updateZSP(uint16_t answer);
     void updateCY(uint16_t value);
+    void updateWordCY(uint32_t value);
     size_t unimplementedOpcode(uint16_t pc);
     uint16_t readOpcodeD16(uint8_t* opcode);
     void writeMemory(uint16_t address, uint8_t value);
