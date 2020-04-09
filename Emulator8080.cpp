@@ -26,8 +26,8 @@ Emulator8080::Emulator8080() {
 	romSize = 0;
 	interuptsEnabled = false;
 
-	work.resize(0x400, 0);
-	video.resize(0x1c00, 0);	
+	work.resize(0x400, 0xfe);
+	video.resize(0x1c00, 0xfe);	
 
 	numSteps = 0;
 }
@@ -521,7 +521,7 @@ void Emulator8080::writeMemory(uint16_t address, uint8_t value) {
 	}
 }
 
-uint8_t Emulator8080::readMemory(uint16_t address) {
+uint8_t Emulator8080::readMemory(uint16_t address) const {
 	while (address > 0x4000) {
 		// handle mirroring of RAM above 0x4000
 		address -= 0x2000;
@@ -548,7 +548,7 @@ uint8_t Emulator8080::readMemory(uint16_t address) {
 	}
 }
 
-uint16_t Emulator8080::getDE() {
+uint16_t Emulator8080::getDE() const {
 	uint16_t value = makeWord(state.d, state.e);
 
 	return value;
@@ -559,7 +559,7 @@ void Emulator8080::setDE(uint16_t value) {
 	state.e = uint8_t(value & 0xff);
 }
 
-uint16_t Emulator8080::getHL() {
+uint16_t Emulator8080::getHL() const {
 	uint16_t value = makeWord(state.h, state.l);
 
 	return value;
@@ -570,7 +570,7 @@ void Emulator8080::setHL(uint16_t value) {
 	state.l = uint8_t(value & 0xff);
 }
 
-uint16_t Emulator8080::getBC() {
+uint16_t Emulator8080::getBC() const {
 	uint16_t value = makeWord(state.b, state.c);
 
 	return value;

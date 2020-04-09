@@ -36,25 +36,36 @@ public:
 
         emulator.init(&(rom.front()), rom.size(), pc);
 
+        step(40020);
+
         return true;
     }
 
     bool OnUserUpdate(float fElapsedTime) override {
         // update
-        if (GetKey(olc::SPACE).bReleased) {
-            emulator.step();
+        if (GetKey(olc::SPACE).bReleased) { 
+            step();            
         }
 
         // render
-        
         FillRect({ 0,0 }, { ScreenWidth(), ScreenHeight() }, olc::BLUE);
 
-        DrawState();
+        DrawCPU(10,10);
+        DrawOpcodes(200,10);
+        DrawMemory("HL", emulator.getHL(), 10, 200);
+        DrawMemory("DE", emulator.getDE(), 10, 300);
+        DrawStack(200, 200);
        
         return true;
     }
 
 private:
+    void step(int stepCount = 1) {
+        for (int i = 0; i < stepCount; i++) {
+            emulator.step();
+        }
+    }
+
     bool loadBinaryFile(const char* filename, std::vector<uint8_t>& outData) {
         std::cout << "Loading " << filename << "\n";
 
@@ -74,9 +85,9 @@ private:
         return true;
     }
 
-    void DrawState() {
-        
-        DrawString({ 10, 10 }, "CPU State");
+    void DrawCPU(int x, int y) {
+
+        DrawString({ x, y }, "CPU State");
 
         const Emulator8080::State& state = emulator.getState();
         uint64_t numSteps = emulator.getNumSteps();
@@ -84,43 +95,72 @@ private:
         std::vector<std::string> reports = {
             FormatBuffer("step: %llu", numSteps),
             FormatBuffer("   a: 0x%02x", state.a),
-            FormatBuffer("   b: 0x%02x", state.b),
-            FormatBuffer("   c: 0x%02x", state.c),
-            FormatBuffer("   d: 0x%02x", state.d),
-            FormatBuffer("   e: 0x%02x", state.e),
-            FormatBuffer("   h: 0x%02x", state.h),
-            FormatBuffer("   l: 0x%02x", state.l),
-            FormatBuffer("  sp: %04x", state.sp),
-            FormatBuffer("  pc: %04x", state.pc),
+            FormatBuffer("  bc: 0x%02x%02x", state.b, state.c),
+            FormatBuffer("  de: 0x%02x%02x", state.d, state.e),
+            FormatBuffer("  hl: 0x%02x%02x", state.h, state.l),
+            FormatBuffer("  sp: 0x%04x", state.sp),
+            FormatBuffer("  pc: 0x%04x", state.pc),
             FormatBuffer("   z: %u", state.cc.z),
             FormatBuffer("   s: %u", state.cc.s),
             FormatBuffer("   p: %u", state.cc.p),
             FormatBuffer("  cy: %u", state.cc.cy),
             FormatBuffer("  ac: %u", state.cc.ac),
         };
-        
-        {
-            int y = 20;
-            for (auto it = reports.begin(); it != reports.end(); it++) {
-                DrawString({ 20, y }, *it);
-                y += 10;
-            }
+
+        y += 10;
+        for (auto it = reports.begin(); it != reports.end(); it++) {
+            DrawString({ x + 10, y }, *it);
+            y += 10;
         }
 
+    }
 
-        DrawString({ 200, 10 }, "Instructions");
+    void DrawOpcodes(int x, int y) {
+        DrawString({ x, y }, "Opcodes");
         
+        const Emulator8080::State& state = emulator.getState();        
         uint16_t pc = state.pc;
 
-        int y = 20;
+        y += 10;
         for (int i = 0; i < 10; i++) {
             std::string instruction;
             uint16_t opcodeSize = Disassemble8080::dissassembleOpcode(&(rom.front()) + pc, instruction);
             
-            DrawString({ 210, y }, FormatBuffer("0x%04x %s", pc, instruction.c_str()));
+            DrawString({ x + 10, y }, FormatBuffer("0x%04x %s", pc, instruction.c_str()));
             y += 10;
 
             pc += opcodeSize;
+        }
+    }
+
+    void DrawMemory(const char* label, uint16_t address, int x, int y) {
+        DrawString({ x, y }, FormatBuffer("Memory (%s)", label));
+
+        // 4 byte alignment
+        address &= 3;
+
+        y += 10;
+        for (int i = 0; i < 8; i++) {
+            DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address+1), emulator.readMemory(address+2), emulator.readMemory(address+3)));
+
+            y += 10;
+            address += 4;
+        }
+    }
+
+    void DrawStack(int x, int y) {
+        DrawString({ x, y }, "Stack");
+
+        const Emulator8080::State& state = emulator.getState();
+        uint16_t sp = state.sp;
+        uint16_t address = sp & ~3;
+
+        y += 10;
+        for (int i = 0; i < 10; i++) {
+            DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address + 1), emulator.readMemory(address + 2), emulator.readMemory(address + 3)));
+
+            y += 10;
+            address += 4;
         }
     }
 

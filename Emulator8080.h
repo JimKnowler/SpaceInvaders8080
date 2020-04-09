@@ -42,19 +42,27 @@ public:
     // get the current state of the CPU
     const State& getState() const;
 
+    // get byte from memory
+    uint8_t readMemory(uint16_t address) const;
+
+    // get HL
+    uint16_t getHL() const;
+
+    // get DE
+    uint16_t getDE() const;
+
+    // get BC
+    uint16_t getBC() const;
+    
 private:
     void updateZSP(uint16_t answer);
     void updateCY(uint16_t value);
     size_t unimplementedOpcode(uint16_t pc);
     uint16_t readOpcodeD16(uint8_t* opcode);
     void writeMemory(uint16_t address, uint8_t value);
-    uint8_t readMemory(uint16_t address);
-    uint16_t getDE();
     void setDE(uint16_t value);
-    uint16_t getHL();
     void setHL(uint16_t value);
-    uint16_t getBC();
-
+    
     
     State           state;
     
