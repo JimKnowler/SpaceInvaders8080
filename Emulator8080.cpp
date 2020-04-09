@@ -450,7 +450,7 @@ void Emulator8080::step() {
 
 		case 0xFE:						// CPI D8
 		{
-			uint8_t value = state.a - opcode[1];
+			uint16_t value = uint16_t(state.a) - uint16_t(opcode[1]);
 			updateZSP(value);
 			updateCY(value);
 
