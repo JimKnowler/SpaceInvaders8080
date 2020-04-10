@@ -55,7 +55,7 @@ public:
                 
         emulator.init(&(rom.front()), rom.size(), pc);        
 
-        step(56);
+        step(272);      // cpudiag.asm: TEST "ORA"
 
         return true;
     }
@@ -178,12 +178,14 @@ private:
         // 4 byte alignment
         address &= ~3;
 
-        y += 10;
-        for (int i = 0; i < 8; i++) {
-            DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address+1), emulator.readMemory(address+2), emulator.readMemory(address+3)));
-
+        if (address < 0x4000) {
             y += 10;
-            address += 4;
+            for (int i = 0; i < 8; i++) {
+                DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address + 1), emulator.readMemory(address + 2), emulator.readMemory(address + 3)));
+
+                y += 10;
+                address += 4;
+            }
         }
     }
 

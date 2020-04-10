@@ -63,6 +63,8 @@ private:
     void writeMemory(uint16_t address, uint8_t value);
     void setDE(uint16_t value);
     void setHL(uint16_t value);
+    void call(uint16_t address, uint16_t returnAddress);
+    void ret();
     
     
     State           state;
