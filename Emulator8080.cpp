@@ -656,6 +656,16 @@ void Emulator8080::step() {
 			state.sp -= 2;
 			break;
 		}
+		case 0xF6:						// ORI D8
+		{
+			uint8_t data = opcode[1];
+			uint8_t value = state.a | data;
+			updateCY(value);
+			updateZSP(value);
+			state.a = value;
+			opcodeSize = 2;
+			break;
+		}
 
 		case 0xFA:						// JM
 		{

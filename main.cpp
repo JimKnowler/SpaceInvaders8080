@@ -37,19 +37,25 @@ public:
     bool OnUserCreate() override {
         // called once at start
 
-        loadBinaryFile(kRomFilename, rom);
+        loadBinaryFile(kRomFilename, kRomLoadAddress, rom);
         uint16_t pc = kRomLoadAddress;
 
-        if (pc > 0) {
-            // prepend buffer
-            std::vector<uint8_t> prepend;
-            prepend.resize(pc, 0xfa);
-            rom.insert(rom.begin(), prepend.begin(), prepend.end());
-        }
+#if 1
+        // modify CPU Test
+        
+        // fix stack pointer 
+        rom[368] = 0x7;
 
-        emulator.init(&(rom.front()), rom.size(), pc);
+        // skip DAA test
+        rom[0x59c] = 0xc3;  // JMP
+        rom[0x59d] = 0xc2;
+        rom[0x59e] = 0x05;
 
-        step(100000);
+#endif
+                
+        emulator.init(&(rom.front()), rom.size(), pc);        
+
+        step(56);
 
         return true;
     }
@@ -90,7 +96,7 @@ private:
         }
     }
 
-    bool loadBinaryFile(const char* filename, std::vector<uint8_t>& outData) {
+    bool loadBinaryFile(const char* filename, uint16_t offset, std::vector<uint8_t>& outData) {
         std::cout << "Loading " << filename << "\n";
 
         std::ifstream file;
@@ -105,6 +111,15 @@ private:
         file.read(reinterpret_cast<char*>(&(outData.front())), size);
 
         std::cout << "Loaded " << filename << " with " << size << " bytes\n";
+
+        if (offset > 0) {
+            // prepend buffer
+            std::vector<uint8_t> prepend;
+            prepend.resize(offset, 0xfa);
+            rom.insert(outData.begin(), prepend.begin(), prepend.end());
+
+            std::cout << "Prepended " << filename << " with " << offset << " bytes\n";
+        }
 
         return true;
     }
