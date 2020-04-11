@@ -55,7 +55,7 @@ public:
                 
         emulator.init(&(rom.front()), rom.size(), pc);        
 
-        step(272);      // cpudiag.asm: TEST "ORA"
+        step(299);      // cpudiag.asm: TEST MOV M,B + MOV B,M
 
         return true;
     }

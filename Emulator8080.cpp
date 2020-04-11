@@ -866,7 +866,49 @@ void Emulator8080::step() {
 			updateCY(state.a);
 			break;
 		}
-		
+		case 0xA8:						// XRA B
+		{
+			state.a = state.a ^ state.b;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xA9:						// XRA C
+		{
+			state.a = state.a ^ state.c;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xAA:						// XRA D
+		{
+			state.a = state.a ^ state.d;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xAB:						// XRA E
+		{
+			state.a = state.a ^ state.e;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xAC:						// XRA H
+		{
+			state.a = state.a ^ state.h;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xAD:						// XRA L
+		{
+			state.a = state.a ^ state.l;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+
 		case 0xAf:						// XRA A
 		{
 			state.a = state.a ^ state.a;
