@@ -874,6 +874,55 @@ void Emulator8080::step() {
 			updateCY(state.a);
 			break;
 		}
+		case 0xB0:						// ORA B
+		{
+			state.a = state.a | state.b;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xB1:						// ORA C
+		{
+			state.a = state.a | state.c;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xB2:						// ORA D
+		{
+			state.a = state.a | state.d;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xB3:						// ORA E
+		{
+			state.a = state.a | state.e;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xB4:						// ORA H
+		{
+			state.a = state.a | state.h;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xB5:						// ORA L
+		{
+			state.a = state.a | state.l;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
+		case 0xB7:						// ORA a
+		{
+			state.a = state.a | state.a;
+			updateZSP(state.a);
+			updateCY(state.a);
+			break;
+		}
 
 		case 0xC0:						// RNZ
 		{
