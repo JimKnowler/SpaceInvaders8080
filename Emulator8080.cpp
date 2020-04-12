@@ -1,5 +1,6 @@
 #include "Emulator8080.h"
 #include "Disassemble8080.h"
+#include "BuildOptions.h"
 
 #include <cstring>
 #include <cassert>
@@ -383,7 +384,7 @@ void Emulator8080::step() {
 			uint16_t value = readMemory(address);
 			value += 1;
 			updateZSP(value);
-			writeMemory(address, value);
+			writeMemory(address, uint8_t(value & 0xff));
 			break;
 		}
 		case 0x35:						// DCR M
@@ -392,7 +393,7 @@ void Emulator8080::step() {
 			uint16_t value = readMemory(address);
 			value -= 1;
 			updateZSP(value);
-			writeMemory(address, value);
+			writeMemory(address, uint8_t(value & 0xff));
 			break;
 		}
 		case 0x36:						// MVI M, D8
@@ -1338,7 +1339,7 @@ void Emulator8080::step() {
 		{
 
 			uint16_t address = readOpcodeD16(opcode);
-#if 1    
+#ifdef CPUDIAG
 			if (5 == address)
 			{
 				// cpudiag - print function

@@ -13,17 +13,18 @@
 
 #include "Disassemble8080.h"
 #include "Emulator8080.h"
+#include "BuildOptions.h"
 
 namespace {
     const uint32_t kScreenWidth = 800;
     const uint32_t kScreenHeight = 600;
 
-#if 0
+#ifdef CPUDIAG
+	const char* kRomFilename = "./roms/cpudiag.bin";
+	const uint16_t kRomLoadAddress = 0x100;
+#else
     const char* kRomFilename = "./roms/spaceinvaders/invaders.concatenated";
     const uint16_t kRomLoadAddress = 0;
-#else 
-    const char* kRomFilename = "./roms/cpudiag.bin";
-    const uint16_t kRomLoadAddress = 0x100;
 #endif
 }
 
@@ -40,7 +41,7 @@ public:
         loadBinaryFile(kRomFilename, kRomLoadAddress, rom);
         uint16_t pc = kRomLoadAddress;
 
-#if 1
+#ifdef CPUDIAG
         // CPU Test
         
         // fix stack pointer 
@@ -53,7 +54,8 @@ public:
 
 		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 2000, 0, false, true);
 
-
+		// run enough steps to complete test
+		// expect to see "CPU IS OPERATIONAL" in console TTY
 		step(610);
 
 #else

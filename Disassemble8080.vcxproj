@@ -156,6 +156,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BuildOptions.h" />
     <ClInclude Include="Disassemble8080.h" />
     <ClInclude Include="Emulator8080.h" />
     <ClInclude Include="olcPGEX_Gamepad.h" />
