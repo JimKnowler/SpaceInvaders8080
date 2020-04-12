@@ -13,12 +13,19 @@
 
 #include "Disassemble8080.h"
 #include "Emulator8080.h"
+#include "BuildOptions.h"
 
 namespace {
     const uint32_t kScreenWidth = 800;
     const uint32_t kScreenHeight = 600;
 
+#ifdef CPUDIAG
+	const char* kRomFilename = "./roms/cpudiag.bin";
+	const uint16_t kRomLoadAddress = 0x100;
+#else
     const char* kRomFilename = "./roms/spaceinvaders/invaders.concatenated";
+    const uint16_t kRomLoadAddress = 0;
+#endif
 }
 
 class SpaceInvaders : public olc::PixelGameEngine
@@ -31,12 +38,35 @@ public:
     bool OnUserCreate() override {
         // called once at start
 
-        loadBinaryFile(kRomFilename, rom);
-        uint16_t pc = 0;
+        loadBinaryFile(kRomFilename, kRomLoadAddress, rom);
+        uint16_t pc = kRomLoadAddress;
 
-        emulator.init(&(rom.front()), rom.size(), pc);
+#ifdef CPUDIAG
+        // CPU Test
+        
+        // fix stack pointer 
+        rom[368] = 0x7;
 
-        step(50000);
+        // skip DAA test
+        rom[0x59c] = 0xc3;  // JMP
+        rom[0x59d] = 0xc2;
+        rom[0x59e] = 0x05;
+
+		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 2000, 0, false, true);
+
+		// run enough steps to complete test
+		// expect to see "CPU IS OPERATIONAL" in console TTY
+		step(610);
+
+#else
+		// space invaders
+		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 0x2400-0x2000, 0x4000-0x2400, true, true);
+
+		// run the first 50,000 instructions
+		step(50000);		
+#endif
+                
+        
 
         return true;
     }
@@ -77,7 +107,7 @@ private:
         }
     }
 
-    bool loadBinaryFile(const char* filename, std::vector<uint8_t>& outData) {
+    bool loadBinaryFile(const char* filename, uint16_t offset, std::vector<uint8_t>& outData) {
         std::cout << "Loading " << filename << "\n";
 
         std::ifstream file;
@@ -92,6 +122,15 @@ private:
         file.read(reinterpret_cast<char*>(&(outData.front())), size);
 
         std::cout << "Loaded " << filename << " with " << size << " bytes\n";
+
+        if (offset > 0) {
+            // prepend buffer
+            std::vector<uint8_t> prepend;
+            prepend.resize(offset, 0xfa);
+            rom.insert(outData.begin(), prepend.begin(), prepend.end());
+
+            std::cout << "Prepended " << filename << " with " << offset << " bytes\n";
+        }
 
         return true;
     }
@@ -150,12 +189,14 @@ private:
         // 4 byte alignment
         address &= ~3;
 
-        y += 10;
-        for (int i = 0; i < 8; i++) {
-            DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address+1), emulator.readMemory(address+2), emulator.readMemory(address+3)));
-
+        if (address < emulator.getRamTop()) {
             y += 10;
-            address += 4;
+            for (int i = 0; i < 8; i++) {
+                DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address + 1), emulator.readMemory(address + 2), emulator.readMemory(address + 3)));
+
+                y += 10;
+                address += 4;
+            }
         }
     }
 
@@ -168,6 +209,9 @@ private:
 
         y += 10;
         for (int i = 0; i < 10; i++) {
+			if (address >= emulator.getRamTop()) {
+				break;
+			}
             DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address + 1), emulator.readMemory(address + 2), emulator.readMemory(address + 3)));
 
             y += 10;
@@ -191,29 +235,6 @@ private:
     Emulator8080 emulator;
 
 };
-
-#if 0
-int main()
-{
-    const char* filename = "./roms/spaceinvaders/invaders.concatenated";
-
-    std::vector<uint8_t> data;
-
-    loadBinaryFile(filename, data);
-
-    uint16_t pc = 0;
-
-#ifdef ENABLE_DISASSEMBLER
-    disassemble(data, pc);
-#endif
-
-    emulate(data, pc);
-
-    return 0;
-}
-#endif
-
-
 
 int main()
 {

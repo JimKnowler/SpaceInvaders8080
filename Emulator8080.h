@@ -8,7 +8,7 @@ public:
     Emulator8080();
 
     // initialise the emulator
-    void init(uint8_t* rom, size_t romSize,  uint16_t pc);
+    void init(uint8_t* rom, uint16_t romSize,  uint16_t pc, uint16_t inWorkSize, uint16_t inVideoSize, bool isRamMirrorEnabled, bool isRomWriteable);
 
     // step through an instruction at current address in pc
     void step();
@@ -53,6 +53,9 @@ public:
 
     // get BC
     uint16_t getBC() const;
+
+	// get address at top of RAM
+	uint16_t getRamTop() const;
     
 private:
     void updateZSP(uint16_t answer);
@@ -63,16 +66,26 @@ private:
     void writeMemory(uint16_t address, uint8_t value);
     void setDE(uint16_t value);
     void setHL(uint16_t value);
+	void setBC(uint16_t value);
+    void call(uint16_t address, uint16_t returnAddress);
+    void ret();
     
     
     State           state;
     
     uint8_t*        rom;  
-    size_t          romSize;
+	uint16_t          romSize;
     bool            interuptsEnabled;
 
     std::vector<uint8_t> work;
     std::vector<uint8_t> video;
+
+	uint16_t		workTop;
+	uint16_t		videoTop;
+	uint16_t		ramSize;
+
+	bool			isRamMirrorEnabled;
+	bool			isRomWriteable;
 
     uint64_t        numSteps;
 };

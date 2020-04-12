@@ -38,5 +38,8 @@
     <ClInclude Include="olcPixelGameEngine.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="BuildOptions.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
