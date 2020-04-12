@@ -41,7 +41,7 @@ public:
         uint16_t pc = kRomLoadAddress;
 
 #if 1
-        // modify CPU Test
+        // CPU Test
         
         // fix stack pointer 
         rom[368] = 0x7;
@@ -51,11 +51,20 @@ public:
         rom[0x59d] = 0xc2;
         rom[0x59e] = 0x05;
 
+		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 2000, 0, false, true);
+
+
+		step(610);
+
+#else
+		// space invaders
+		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 0x2400-0x2000, 0x4000-0x2400, true, true);
+
+		// run the first 50,000 instructions
+		step(50000);		
 #endif
                 
-        emulator.init(&(rom.front()), rom.size(), pc);        
-
-        step(299);      // cpudiag.asm: TEST MOV M,B + MOV B,M
+        
 
         return true;
     }
@@ -178,7 +187,7 @@ private:
         // 4 byte alignment
         address &= ~3;
 
-        if (address < 0x4000) {
+        if (address < emulator.getRamTop()) {
             y += 10;
             for (int i = 0; i < 8; i++) {
                 DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address + 1), emulator.readMemory(address + 2), emulator.readMemory(address + 3)));
@@ -198,6 +207,9 @@ private:
 
         y += 10;
         for (int i = 0; i < 10; i++) {
+			if (address >= emulator.getRamTop()) {
+				break;
+			}
             DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address + 1), emulator.readMemory(address + 2), emulator.readMemory(address + 3)));
 
             y += 10;
