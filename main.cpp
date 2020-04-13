@@ -42,9 +42,6 @@ public:
         loadBinaryFile(kRomFilename, kRomLoadAddress, rom);
         uint16_t pc = kRomLoadAddress;
 		
-		inPort1 = 0;
-		inPort2 = 0;
-
 		isDebugging = true;
 
 		emulator.setCallbackIn([this](uint8_t port) -> uint8_t {
@@ -52,11 +49,29 @@ public:
 
 			uint8_t a = 0;
 			switch (port) {
+			case 0:
+				a = (1<<1) |									// always 1
+					(1<<2) |									// always 1
+					(1<<3) |									// always 1
+					((GetKey(olc::SPACE).bHeld ? 1 : 0) << 4) |	// P1 Shoot
+					((GetKey(olc::LEFT).bHeld ? 1 : 0) << 5) |	// P1 Left
+					((GetKey(olc::RIGHT).bHeld ? 1 : 0) << 6);	// P1 Right
+				break;
 			case 1:
-				a = inPort1;
+				a =
+					(GetKey(olc::C).bHeld ? 0 : 1) |			// Coin
+					((GetKey(olc::K2).bHeld ? 1 : 0) << 1) |		// P2 Start Button
+					((GetKey(olc::K1).bHeld ? 1 : 0) << 2) |		// P1 Start Button
+					(1 << 3) |									// always 1
+					((GetKey(olc::SPACE).bHeld ? 1 : 0) << 4) |	// P1 Shoot
+					((GetKey(olc::LEFT).bHeld ? 1 : 0) << 5) |	// P1 Left
+					((GetKey(olc::RIGHT).bHeld ? 1 : 0) << 6);	// P1 Right
 				break;
 			case 2:
-				a = inPort2;
+				a =
+					(GetKey(olc::SHIFT).bHeld ? 1 : 0) << 4,	// P2 Shoot
+					(GetKey(olc::Z).bHeld ? 1 : 0) << 5,		// P2 Left
+					(GetKey(olc::X).bHeld ? 1 : 0) << 6;		// P2 Right
 				break;
 			case 3:
 				// read from shift register
@@ -80,7 +95,7 @@ public:
 			case 4:
 				// push to high byte of shift register
 				shiftRegister >>= 8;
-				shiftRegister |= uint16_t(value) << 8;
+				shiftRegister |= (uint16_t(value) << 8);
 				break;
 			default:
 				break;
@@ -177,22 +192,8 @@ public:
 			isDebugging = true;
 		}
 		else if (GetKey(olc::R).bPressed) {
-			// todo: cache frame time for later
 			isDebugging = false;
 		}
-
-		inPort1 =
-			(GetKey(olc::C).bHeld ? 0 : 1),				// Coin
-			(GetKey(olc::K2).bHeld ? 1 : 0) << 1,		// P2 Start Button
-			(GetKey(olc::K1).bHeld ? 1 : 0) << 2,		// P1 Start Button
-			(GetKey(olc::SPACE).bHeld ? 1 : 0) << 4,	// P1 Shoot
-			(GetKey(olc::LEFT).bHeld ? 1 : 0) << 5,		// P1 Left
-			(GetKey(olc::RIGHT).bHeld ? 1 : 0) << 6;	// P1 Right
-		
-		inPort2 =
-			(GetKey(olc::SHIFT).bHeld ? 1 : 0) << 4,	// P2 Shoot
-			(GetKey(olc::Z).bHeld ? 1 : 0) << 5,		// P2 Left
-			(GetKey(olc::X).bHeld ? 1 : 0) << 6;		// P2 Right
 	}
 
 private:
@@ -354,10 +355,7 @@ private:
 
 	uint8_t shiftRegisterResultOffset;
 	uint16_t shiftRegister;
-
-	uint8_t inPort1;
-	uint8_t inPort2;
-
+	
 	bool isDebugging;
 
 	std::chrono::time_point<std::chrono::system_clock> timeLastInterrupt;
