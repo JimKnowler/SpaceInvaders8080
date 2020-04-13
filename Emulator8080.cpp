@@ -1059,7 +1059,6 @@ void Emulator8080::step() {
 			updateZSP(state.a);
 			updateCY(state.a);
 			break;
-			break;
 		}
 		case 0xA7:						// ANA A
 		{
@@ -1521,6 +1520,7 @@ void Emulator8080::step() {
 			state.a = uint8_t(value & 0xff);
 
 			opcodeSize = 2;
+			break;
 		}
 
 		case 0xE0:						// RPO
