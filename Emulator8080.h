@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <functional>
 
 class Emulator8080 {
 public:
@@ -9,6 +10,14 @@ public:
 
     // initialise the emulator
     void init(uint8_t* rom, uint16_t romSize,  uint16_t pc, uint16_t inWorkSize, uint16_t inVideoSize, bool isRamMirrorEnabled, bool isRomWriteable);
+
+	// CallbackIn - invoked for IN opcode
+	typedef std::function<uint8_t(uint8_t port)> CallbackIn;
+	void setCallbackIn(CallbackIn callback);
+
+	// CallbackOut - invoked for OUT opcode
+	typedef std::function<void(uint8_t port, uint8_t value)> CallbackOut;
+	void setCallbackOut(CallbackOut callback);
 
     // step through an instruction at current address in pc
     void step();
@@ -37,6 +46,8 @@ public:
         uint16_t    pc;
 
         ConditionCodes cc;
+
+		bool interruptsEnabled;
     };
 
     // get the current state of the CPU
@@ -56,6 +67,12 @@ public:
 
 	// get address at top of RAM
 	uint16_t getRamTop() const;
+
+	// trigger interrupt on CPU
+	void interrupt(int interruptNum);
+
+	// get the current state of video ram
+	const std::vector<uint8_t> getVideoRam() const;
     
 private:
     void updateZSP(uint16_t answer);
@@ -70,12 +87,10 @@ private:
     void call(uint16_t address, uint16_t returnAddress);
     void ret();
     
-    
     State           state;
     
     uint8_t*        rom;  
-	uint16_t          romSize;
-    bool            interuptsEnabled;
+	uint16_t        romSize;
 
     std::vector<uint8_t> work;
     std::vector<uint8_t> video;
@@ -88,4 +103,7 @@ private:
 	bool			isRomWriteable;
 
     uint64_t        numSteps;
+
+	CallbackIn		callbackIn;
+	CallbackOut		callbackOut;
 };

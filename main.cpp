@@ -10,6 +10,7 @@
 #include <fstream>
 #include <vector>
 #include <cassert>
+#include <chrono>
 
 #include "Disassemble8080.h"
 #include "Emulator8080.h"
@@ -40,6 +41,51 @@ public:
 
         loadBinaryFile(kRomFilename, kRomLoadAddress, rom);
         uint16_t pc = kRomLoadAddress;
+		
+		inPort1 = 0;
+		inPort2 = 0;
+
+		isDebugging = true;
+
+		emulator.setCallbackIn([this](uint8_t port) -> uint8_t {
+			//printf("IN port %u\n", port);
+
+			uint8_t a = 0;
+			switch (port) {
+			case 1:
+				a = inPort1;
+				break;
+			case 2:
+				a = inPort2;
+				break;
+			case 3:
+				// read from shift register
+				a = uint8_t(shiftRegister >> (8 - shiftRegisterResultOffset));
+				break;
+			default:
+				break;
+			}
+			
+			return 0;
+		});
+
+		emulator.setCallbackOut([this](uint8_t port, uint8_t value) -> void {
+			//printf("OUT port %u value %u\n", port, value);
+
+			switch (port) {
+			case 2:
+				// 3 bit shift register offset
+				shiftRegisterResultOffset = value & 0x7;
+				break;
+			case 4:
+				// push to high byte of shift register
+				shiftRegister >>= 8;
+				shiftRegister |= uint16_t(value) << 8;
+				break;
+			default:
+				break;
+			}
+		});
 
 #ifdef CPUDIAG
         // CPU Test
@@ -60,34 +106,25 @@ public:
 
 #else
 		// space invaders
-		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 0x2400-0x2000, 0x4000-0x2400, true, true);
-
-		// run the first 50,000 instructions
-		step(50000);		
+		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 0x2400-0x2000, 0x4000-0x2400, true, true);		
 #endif
                 
-        
+		timeLastInterrupt = getCurrentTime();
 
         return true;
     }
 
     bool OnUserUpdate(float fElapsedTime) override {
         // update
-        if (GetKey(olc::SPACE).bReleased) { 
-            if (GetKey(olc::SHIFT).bHeld) {
-                if (GetKey(olc::CTRL).bHeld) {
-                    step(100);
-                }
-                else {
-                    step(10);
-                }
-            }
-            else {
-                step(1);
-            }
-        }
-
-
+		updateInput();
+		
+		if (isDebugging) {
+			updateStep();
+		}
+		else {
+			updateFrame();
+		}
+	
         // render
         FillRect({ 0,0 }, { ScreenWidth(), ScreenHeight() }, olc::BLUE);
 
@@ -96,9 +133,67 @@ public:
         DrawMemory("HL", emulator.getHL(), 10, 200);
         DrawMemory("DE", emulator.getDE(), 10, 300);
         DrawStack(200, 200);
-       
+		
+		DrawVideoRam(400, 10);
+
         return true;
     }
+
+	void updateFrame() {
+		bool isFrameComplete = false;
+
+		while (!isFrameComplete) {
+			step(10000);
+
+			auto currentTime = getCurrentTime();
+			const float elapsedTime = std::chrono::duration<float>(currentTime - timeLastInterrupt).count();
+			static const float kFrameDuration = 1.0f / 60.0f;
+			if (elapsedTime > kFrameDuration) {
+				timeLastInterrupt = currentTime;
+				emulator.interrupt(2);
+				isFrameComplete = true;
+			}
+		}
+	}
+
+	void updateStep() {
+		if (GetKey(olc::SPACE).bReleased) {
+			if (GetKey(olc::SHIFT).bHeld) {
+				if (GetKey(olc::CTRL).bHeld) {
+					step(100);
+				}
+				else {
+					step(10);
+				}
+			}
+			else {
+				step(1);
+			}
+		}
+	}
+
+	void updateInput() {
+		if (GetKey(olc::D).bPressed) {
+			isDebugging = true;
+		}
+		else if (GetKey(olc::R).bPressed) {
+			// todo: cache frame time for later
+			isDebugging = false;
+		}
+
+		inPort1 =
+			(GetKey(olc::C).bHeld ? 0 : 1),				// Coin
+			(GetKey(olc::K2).bHeld ? 1 : 0) << 1,		// P2 Start Button
+			(GetKey(olc::K1).bHeld ? 1 : 0) << 2,		// P1 Start Button
+			(GetKey(olc::SPACE).bHeld ? 1 : 0) << 4,	// P1 Shoot
+			(GetKey(olc::LEFT).bHeld ? 1 : 0) << 5,		// P1 Left
+			(GetKey(olc::RIGHT).bHeld ? 1 : 0) << 6;	// P1 Right
+		
+		inPort2 =
+			(GetKey(olc::SHIFT).bHeld ? 1 : 0) << 4,	// P2 Shoot
+			(GetKey(olc::Z).bHeld ? 1 : 0) << 5,		// P2 Left
+			(GetKey(olc::X).bHeld ? 1 : 0) << 6;		// P2 Right
+	}
 
 private:
     void step(int stepCount = 1) {
@@ -219,6 +314,25 @@ private:
         }
     }
 
+	void DrawVideoRam(int x, int y) {
+		const std::vector<uint8_t> videoRam = emulator.getVideoRam();
+
+		int i = 0;
+		const int kVideoWidth = 224;
+		const int kVideoHeight = 256;
+
+		for (int ix = 0; ix < kVideoWidth; ix++) {
+			for (int iy = 0; iy < kVideoHeight; iy +=8) {
+				uint8_t byte = videoRam[i++];
+
+				for (int b = 0; b < 8; b++) {
+					Draw({ x + ix, y + kVideoHeight - (iy + b) }, ((byte & 0x1) == 0x1) ? olc::WHITE : olc::BLACK);
+					byte >>= 1;
+				}
+			}
+		}
+	}
+
     std::string FormatBuffer(const char* format, ...) {        
         char buffer[256];
         va_list args;
@@ -230,10 +344,23 @@ private:
 
         return ret;
     }
+
+	std::chrono::time_point<std::chrono::system_clock> getCurrentTime() const {
+		return std::chrono::system_clock::now();
+	}
     
     std::vector<uint8_t> rom;
     Emulator8080 emulator;
 
+	uint8_t shiftRegisterResultOffset;
+	uint16_t shiftRegister;
+
+	uint8_t inPort1;
+	uint8_t inPort2;
+
+	bool isDebugging;
+
+	std::chrono::time_point<std::chrono::system_clock> timeLastInterrupt;
 };
 
 int main()

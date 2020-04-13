@@ -7,6 +7,7 @@
 
 namespace {
 	bool parity(uint16_t value) {
+
 		int size = 16;
 		int count = 0;
 
@@ -36,7 +37,7 @@ Emulator8080::Emulator8080() {
 	memset(&state, sizeof(State), 0);
 	rom = 0;
 	romSize = 0;
-	interuptsEnabled = false;
+	state.interruptsEnabled = false;
 	
 	numSteps = 0;
 }
@@ -54,6 +55,14 @@ void Emulator8080::init(uint8_t* inRom, uint16_t inRomSize, uint16_t inPc, uint1
 	isRamMirrorEnabled = inIsRamMirrorEnabled;
 	isRomWriteable = inIsRomWriteable;
 	numSteps = 0;
+}
+
+void Emulator8080::setCallbackIn(CallbackIn callback) {
+	callbackIn = callback;
+}
+
+void Emulator8080::setCallbackOut(CallbackOut callback) {
+	callbackOut = callback;
 }
 
 uint64_t Emulator8080::getNumSteps() const {
@@ -508,16 +517,12 @@ void Emulator8080::step() {
 			state.c = state.l;
 			break;
 		}
-#if 0
-
 		case 0x4E:						// MOV C, M
 		{
 			uint16_t address = getHL();
 			state.c = readMemory(address);
 			break;
 		}
-#endif
-
 		case 0x4f:						// MOV C, A
 		{
 			state.c = state.a;
@@ -1423,7 +1428,9 @@ void Emulator8080::step() {
 		case 0xD3:						// OUT D8 (special)
 		{
 			uint8_t data = opcode[1];
-			printf("OUT 0x%02x\n", data);
+			if (callbackOut) {
+				callbackOut(data, state.a);
+			}
 			opcodeSize = 2;
 			break;
 		}
@@ -1482,7 +1489,15 @@ void Emulator8080::step() {
 			}
 			break;
 		}
-
+		case 0xDB:						// IN D8 (special)
+		{
+			uint8_t port = opcode[1];
+			if (callbackIn) {
+				state.a = callbackIn(port);
+			}
+			opcodeSize = 2;
+			break;
+		}
 		case 0xDC:						// CC adr
 		{
 			if (state.cc.cy == 1) {
@@ -1667,7 +1682,7 @@ void Emulator8080::step() {
 #if 0
 		case 0xF3:						// DI (special)
 		{
-			printf("DI\n");
+			state.interruptsEnabled = false;
 			break;
 		}
 #endif
@@ -1728,9 +1743,9 @@ void Emulator8080::step() {
 			}
 			break;
 		}
-		case 0xFB:						// EI
+		case 0xFB:						// EI (special)
 		{
-			interuptsEnabled = true;
+			state.interruptsEnabled = true;
 			break;
 		}
 		case 0xFC:						// CM addr
@@ -1910,4 +1925,23 @@ void Emulator8080::ret() {
 
 uint16_t Emulator8080::getRamTop() const {
 	return videoTop;
+}
+
+void Emulator8080::interrupt(int interruptNum) {
+	if (!state.interruptsEnabled) {
+		return;
+	}
+	// push PC to stack
+	uint8_t pclo = uint8_t(state.pc & 0xff);
+	uint8_t pchi = uint8_t((state.pc >> 8) & 0xff);
+	writeMemory(state.sp - 1, pchi);
+	writeMemory(state.sp - 2, pclo);
+	state.sp -= 2;
+
+	// jump to interrupt vector
+	state.pc = 8 * interruptNum;
+}
+
+const std::vector<uint8_t> Emulator8080::getVideoRam() const {
+	return video;
 }
