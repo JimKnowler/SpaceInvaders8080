@@ -44,64 +44,6 @@ public:
 		
 		mode = Mode::Debugger;
 
-		emulator.setCallbackIn([this](uint8_t port) -> uint8_t {
-			//printf("IN port %u\n", port);
-
-			uint8_t a = 0;
-			switch (port) {
-			case 0:
-				a = (1<<1) |									// always 1
-					(1<<2) |									// always 1
-					(1<<3) |									// always 1
-					((GetKey(olc::SPACE).bHeld ? 1 : 0) << 4) |	// P1 Shoot
-					((GetKey(olc::LEFT).bHeld ? 1 : 0) << 5) |	// P1 Left
-					((GetKey(olc::RIGHT).bHeld ? 1 : 0) << 6);	// P1 Right
-				break;
-			case 1:
-				a =
-					(GetKey(olc::C).bHeld ? 0 : 1) |			// Coin
-					((GetKey(olc::K2).bHeld ? 1 : 0) << 1) |		// P2 Start Button
-					((GetKey(olc::K1).bHeld ? 1 : 0) << 2) |		// P1 Start Button
-					(1 << 3) |									// always 1
-					((GetKey(olc::SPACE).bHeld ? 1 : 0) << 4) |	// P1 Shoot
-					((GetKey(olc::LEFT).bHeld ? 1 : 0) << 5) |	// P1 Left
-					((GetKey(olc::RIGHT).bHeld ? 1 : 0) << 6);	// P1 Right
-				break;
-			case 2:
-				a =
-					(GetKey(olc::SHIFT).bHeld ? 1 : 0) << 4,	// P2 Shoot
-					(GetKey(olc::Z).bHeld ? 1 : 0) << 5,		// P2 Left
-					(GetKey(olc::X).bHeld ? 1 : 0) << 6;		// P2 Right
-				break;
-			case 3:
-				// read from shift register
-				a = uint8_t(shiftRegister >> (8 - shiftRegisterResultOffset));
-				break;
-			default:
-				break;
-			}
-			
-			return 0;
-		});
-
-		emulator.setCallbackOut([this](uint8_t port, uint8_t value) -> void {
-			//printf("OUT port %u value %u\n", port, value);
-
-			switch (port) {
-			case 2:
-				// 3 bit shift register offset
-				shiftRegisterResultOffset = value & 0x7;
-				break;
-			case 4:
-				// push to high byte of shift register
-				shiftRegister >>= 8;
-				shiftRegister |= (uint16_t(value) << 8);
-				break;
-			default:
-				break;
-			}
-		});
-
 #ifdef CPUDIAG
         // CPU Test
         
@@ -121,6 +63,8 @@ public:
 
 #else
 		// space invaders
+        initIO();
+
 		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 0x2400-0x2000, 0x4000-0x2400, true, true);		
 #endif
                 
@@ -205,6 +149,67 @@ public:
 	}
 
 private:
+    void initIO() {
+		// space invaders 
+		emulator.setCallbackIn([this](uint8_t port) -> uint8_t {
+			//printf("IN port %u\n", port);
+
+			uint8_t a = 0;
+			switch (port) {
+			case 0:
+				a = (1 << 1) |									// always 1
+					(1 << 2) |									// always 1
+					(1 << 3) |									// always 1
+					((GetKey(olc::SPACE).bHeld ? 1 : 0) << 4) |	// P1 Shoot
+					((GetKey(olc::LEFT).bHeld ? 1 : 0) << 5) |	// P1 Left
+					((GetKey(olc::RIGHT).bHeld ? 1 : 0) << 6);	// P1 Right
+				break;
+			case 1:
+				a =
+					(GetKey(olc::C).bHeld ? 0 : 1) |			// Coin
+					((GetKey(olc::K2).bHeld ? 1 : 0) << 1) |		// P2 Start Button
+					((GetKey(olc::K1).bHeld ? 1 : 0) << 2) |		// P1 Start Button
+					(1 << 3) |									// always 1
+					((GetKey(olc::SPACE).bHeld ? 1 : 0) << 4) |	// P1 Shoot
+					((GetKey(olc::LEFT).bHeld ? 1 : 0) << 5) |	// P1 Left
+					((GetKey(olc::RIGHT).bHeld ? 1 : 0) << 6);	// P1 Right
+				break;
+			case 2:
+				a =
+					(GetKey(olc::SHIFT).bHeld ? 1 : 0) << 4,	// P2 Shoot
+					(GetKey(olc::Z).bHeld ? 1 : 0) << 5,		// P2 Left
+					(GetKey(olc::X).bHeld ? 1 : 0) << 6;		// P2 Right
+				break;
+			case 3:
+				// read from shift register
+				a = uint8_t( (shiftRegister >> (8 - shiftRegisterResultOffset)) & 0xff);
+				break;
+			default:
+				break;
+			}
+
+			return a;
+		});
+
+		emulator.setCallbackOut([this](uint8_t port, uint8_t value) -> void {
+			//printf("OUT port %u value %u\n", port, value);
+
+			switch (port) {
+			case 2:
+				// 3 bit shift register offset
+				shiftRegisterResultOffset = value & 0x7;
+				break;
+			case 4:
+				// push to high byte of shift register
+				shiftRegister >>= 8;
+				shiftRegister |= (uint16_t(value) << 8);
+				break;
+			default:
+				break;
+			}
+		});
+    }
+
     void step(int stepCount = 1) {
         for (int i = 0; i < stepCount; i++) {
             emulator.step();
