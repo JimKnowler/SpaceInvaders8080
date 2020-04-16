@@ -42,7 +42,7 @@ public:
         loadBinaryFile(kRomFilename, kRomLoadAddress, rom);
         uint16_t pc = kRomLoadAddress;
 		
-		isDebugging = true;
+		mode = Mode::Debugger;
 
 		emulator.setCallbackIn([this](uint8_t port) -> uint8_t {
 			//printf("IN port %u\n", port);
@@ -133,18 +133,21 @@ public:
         // update
 		updateInput();
 		
-		if (isDebugging) {
-			updateStep();
-		}
-		else {
-			updateFrame();
+		switch (mode) {
+			case Mode::Debugger:
+				updateStep();
+				break;
+			case Mode::Run:
+				updateFrame();
+				break;
 		}
 	
         // render
         FillRect({ 0,0 }, { ScreenWidth(), ScreenHeight() }, olc::BLUE);
 
-        DrawCPU(10,10);
-        DrawOpcodes(200,10);
+		DrawString({ 10,10 }, FormatBuffer("Mode [%s]", (mode == Mode::Debugger) ? "DEBUGGER" : "RUN"));
+        DrawCPU(10,40);
+        DrawOpcodes(200,40);
         DrawMemory("HL", emulator.getHL(), 10, 200);
         DrawMemory("DE", emulator.getDE(), 10, 300);
         DrawStack(200, 200);
@@ -163,6 +166,8 @@ public:
 			auto currentTime = getCurrentTime();
 			const float elapsedTime = std::chrono::duration<float>(currentTime - timeLastInterrupt).count();
 			static const float kFrameDuration = 1.0f / 60.0f;
+			
+			// Space Invaders - vblank/vhalf interrupts
 			if (elapsedTime > kFrameDuration) {
 				timeLastInterrupt = currentTime;
 				emulator.interrupt(2);
@@ -175,13 +180,16 @@ public:
 		if (GetKey(olc::SPACE).bReleased) {
 			if (GetKey(olc::SHIFT).bHeld) {
 				if (GetKey(olc::CTRL).bHeld) {
+					// CTRL + SHIFT + SPACE
 					step(100);
 				}
 				else {
+					// SHIFT + SPACE
 					step(10);
 				}
 			}
 			else {
+				// SPACE
 				step(1);
 			}
 		}
@@ -189,10 +197,10 @@ public:
 
 	void updateInput() {
 		if (GetKey(olc::D).bPressed) {
-			isDebugging = true;
+			mode = Mode::Debugger;
 		}
 		else if (GetKey(olc::R).bPressed) {
-			isDebugging = false;
+			mode = Mode::Run;
 		}
 	}
 
@@ -356,7 +364,11 @@ private:
 	uint8_t shiftRegisterResultOffset;
 	uint16_t shiftRegister;
 	
-	bool isDebugging;
+	enum class Mode {
+		Debugger,
+		Run
+	};
+	Mode mode;
 
 	std::chrono::time_point<std::chrono::system_clock> timeLastInterrupt;
 };
