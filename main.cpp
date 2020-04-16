@@ -17,7 +17,7 @@
 #include "BuildOptions.h"
 
 namespace {
-    const uint32_t kScreenWidth = 800;
+    const uint32_t kScreenWidth = 1000;
     const uint32_t kScreenHeight = 600;
 
 #ifdef CPUDIAG
@@ -332,15 +332,15 @@ private:
 		const std::vector<uint8_t> videoRam = emulator.getVideoRam();
 
 		int i = 0;
-		const int kVideoWidth = 224;
-		const int kVideoHeight = 256;
+		const int kVideoRamWidth = 224;
+		const int kVideoRamHeight = 256;
 
-		for (int ix = 0; ix < kVideoWidth; ix++) {
-			for (int iy = 0; iy < kVideoHeight; iy +=8) {
+		for (int ix = 0; ix < kVideoRamWidth; ix++) {
+			for (int iy = 0; iy < kVideoRamHeight; iy +=8) {
 				uint8_t byte = videoRam[i++];
 
 				for (int b = 0; b < 8; b++) {
-					Draw({ x + ix, y + kVideoHeight - (iy + b) }, ((byte & 0x1) == 0x1) ? olc::WHITE : olc::BLACK);
+					FillRect({ x + ( ix << 1), y + ((kVideoRamHeight - (iy + b)) << 1) }, { 2,2 }, ((byte & 0x1) == 0x1) ? olc::WHITE : olc::BLACK);
 					byte >>= 1;
 				}
 			}
