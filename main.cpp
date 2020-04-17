@@ -245,7 +245,11 @@ private:
 				break;
 			case 3:
 				// read from shift register
-				a = uint8_t( (shiftRegister >> (8 - shiftRegisterResultOffset)) & 0xff);
+				{
+					uint8_t shiftAmount = 8 - shiftRegisterResultOffset;
+					uint16_t shiftedResult = shiftRegister >> shiftAmount;
+					a = uint8_t(shiftedResult & 0xff);
+				}
 				break;
 			default:
 				break;
