@@ -1261,7 +1261,7 @@ void Emulator8080::step() {
 		{
 			if (state.cc.z == 0) {
 				ret();
-				return;
+				opcodeSize = 0;
 			}
 			break;
 		}
@@ -1277,18 +1277,20 @@ void Emulator8080::step() {
 			if (0 == state.cc.z) {
 				uint16_t address = readOpcodeD16(opcode);
 				state.pc = address;
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+
+			break;
 		}
 		case 0xC3:						// JMP adr
 		{
 			uint16_t address = readOpcodeD16(opcode);
 			state.pc = address;
-			return;
+			opcodeSize = 0;
+			break;
 		}
 		case 0xC4:						// CNZ adr
 		{
@@ -1296,12 +1298,13 @@ void Emulator8080::step() {
 				uint16_t address = readOpcodeD16(opcode);
 				uint16_t returnAddress = state.pc + 3;
 				call(address, returnAddress);
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+
+			break;
 		}
 		case 0xC5:						// PUSH B
 		{
@@ -1324,25 +1327,27 @@ void Emulator8080::step() {
 		{
 			if (state.cc.z == 1) {
 				ret();
-				return;
+				opcodeSize = 0;
 			}
 			break;
 		}
 		case 0xC9:						// RET
 		{
 			ret();
-			return;
+			opcodeSize = 0;
+			break;
 		}
 		case 0xCA:						// JZ adr
 		{
 			if (state.cc.z != 0) {
 				uint16_t address = readOpcodeD16(opcode);
 				state.pc = address;
-				return;
+				opcodeSize = 0;
 			} else {
 				opcodeSize = 3;
-				break;
 			}
+
+			break;
 		}
 
 		case 0xCC:						// CZ adr
@@ -1351,12 +1356,13 @@ void Emulator8080::step() {
 				uint16_t address = readOpcodeD16(opcode);
 				uint16_t returnAddress = state.pc + 3;
 				call(address, returnAddress);
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+
+			break;
 		}
 		case 0xCD:						// CALL adr
 		{
@@ -1400,7 +1406,8 @@ void Emulator8080::step() {
 				call(address, returnAddress);				
 			}
 
-			return;
+			opcodeSize = 0;
+			break;
 		}
 
 		case 0xCE:						// ACI D8
@@ -1420,7 +1427,7 @@ void Emulator8080::step() {
 		{
 			if (state.cc.cy == 0) {
 				ret();
-				return;
+				opcodeSize = 0;
 			}
 			break;
 		}
@@ -1436,12 +1443,13 @@ void Emulator8080::step() {
 			if (state.cc.cy == 0) {
 				uint16_t address = readOpcodeD16(opcode);
 				state.pc = address;
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+
+			break;
 		}
 		case 0xD3:						// OUT D8 (special)
 		{
@@ -1458,12 +1466,13 @@ void Emulator8080::step() {
 				uint16_t address = readOpcodeD16(opcode);
 				uint16_t returnAddress = state.pc + 3;
 				call(address, returnAddress);
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+
+			break;
 		}
 		case 0xD5:						// PUSH D
 		{
@@ -1488,7 +1497,7 @@ void Emulator8080::step() {
 		{
 			if (state.cc.cy == 1) {
 				ret();
-				return;
+				opcodeSize = 0;
 			}
 
 			break;
@@ -1499,11 +1508,10 @@ void Emulator8080::step() {
 			if (state.cc.cy == 1) {
 				uint16_t address = readOpcodeD16(opcode);
 				state.pc = address;
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
 			break;
 		}
@@ -1522,12 +1530,13 @@ void Emulator8080::step() {
 				uint16_t address = readOpcodeD16(opcode);
 				uint16_t returnAddress = state.pc + 3;
 				call(address, returnAddress);
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+
+			break;
 		}
 
 		case 0xDE:						// SBI D8
@@ -1546,7 +1555,7 @@ void Emulator8080::step() {
 		{
 			if (state.cc.p == 0) {
 				ret();
-				return;
+				opcodeSize = 0;
 			}
 			break;
 		}
@@ -1562,11 +1571,10 @@ void Emulator8080::step() {
 			if (state.cc.p == 0) {
 				uint16_t address = readOpcodeD16(opcode);
 				state.pc = address;
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
 			break;
 		}
@@ -1586,11 +1594,10 @@ void Emulator8080::step() {
 				uint16_t address = readOpcodeD16(opcode);
 				uint16_t returnAddress = state.pc + 3;
 				call(address, returnAddress);
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
 			break;
 		}
@@ -1614,7 +1621,7 @@ void Emulator8080::step() {
 		{
 			if (state.cc.p == 1) {
 				ret();
-				return;
+				opcodeSize = 0;
 			}
 
 			break;
@@ -1622,19 +1629,20 @@ void Emulator8080::step() {
 		case 0xE9:						// PCHL
 		{
 			state.pc = makeWord(state.h, state.l);
-			return;
+			opcodeSize = 0;
+			break;
 		}
 		case 0xEA:						// JPE adr
 		{
 			if (state.cc.p == 1) {
 				uint16_t address = readOpcodeD16(opcode);
 				state.pc = address;
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+			break;
 		}
 		case 0xEB:						// XCHG
 		{
@@ -1648,12 +1656,13 @@ void Emulator8080::step() {
 				uint16_t address = readOpcodeD16(opcode);
 				uint16_t returnAddress = state.pc + 3;
 				call(address, returnAddress);
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+
+			break;
 		}
 
 		case 0xEE:						// XRI
@@ -1670,7 +1679,7 @@ void Emulator8080::step() {
 		{
 			if (state.cc.s == 0) {
 				ret();
-				return;
+				opcodeSize = 0;
 			}
 
 			break;
@@ -1689,11 +1698,10 @@ void Emulator8080::step() {
 			if (state.cc.s == 0) {
 				uint16_t address = readOpcodeD16(opcode);
 				state.pc = address;
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
 			break;
 		}
@@ -1711,12 +1719,13 @@ void Emulator8080::step() {
 				uint16_t address = readOpcodeD16(opcode);
 				uint16_t returnAddress = state.pc + 3;
 				call(address, returnAddress);
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+
+			break;
 		}
 		case 0xF5:						// PUSH PSW
 		{
@@ -1740,7 +1749,7 @@ void Emulator8080::step() {
 		{
 			if (state.cc.s == 1) {
 				ret();
-				return;
+				opcodeSize = 0;
 			}
 			break;
 		}
@@ -1754,12 +1763,12 @@ void Emulator8080::step() {
 			if (state.cc.s == 1) {
 				uint16_t address = readOpcodeD16(opcode);
 				state.pc = address;
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+
 			break;
 		}
 		case 0xFB:						// EI (special)
@@ -1773,12 +1782,13 @@ void Emulator8080::step() {
 				uint16_t address = readOpcodeD16(opcode);
 				uint16_t returnAddress = state.pc + 3;
 				call(address, returnAddress);
-				return;
+				opcodeSize = 0;
 			}
 			else {
 				opcodeSize = 3;
-				break;
 			}
+
+			break;
 		}
 
 		case 0xFE:						// CPI D8
@@ -1798,7 +1808,6 @@ void Emulator8080::step() {
 
 	state.pc += uint16_t(opcodeSize);
 
-	// todo: remove RETURN statements within SWITCH, replace with "opcodeSize = 0" ?
 	if (!breakpointsOpcode.empty() && (breakpointsOpcode.find(state.pc) != breakpointsOpcode.end())) {
 		if (callbackBreakpoint) {
 			callbackBreakpoint(BreakPoint::Opcode, state.pc, 0);
