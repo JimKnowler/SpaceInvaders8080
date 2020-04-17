@@ -1784,7 +1784,7 @@ void Emulator8080::step() {
 
 void Emulator8080::updateZSP(uint16_t answer) {
 	state.cc.z = ((answer & 0xff) == 0);
-	state.cc.s = ((answer & 0x80) == 0x80);	
+	state.cc.s = ((answer & 0x80) == 0x80);
 	state.cc.p = parity(answer & 0xff);
 
 	// ac (auxilliary carry) not implemented - not required for space invaders
@@ -1800,15 +1800,15 @@ void Emulator8080::updateWordCY(uint32_t value) {
 
 size_t Emulator8080::unimplementedOpcode(uint16_t pc) {
 	assert(pc < romSize);
-	
+
 	uint8_t* opcode = rom + pc;
 
 	std::string strOpcode;
 	size_t numBytes = Disassemble8080::dissassembleOpcode(opcode, strOpcode);
 
-	
+
 	printf("unimplemented Instruction: %04x 0x%02x %s\n", pc, *opcode, strOpcode.c_str());
-	
+
 	return numBytes;
 }
 
@@ -1827,7 +1827,13 @@ void Emulator8080::writeMemory(uint16_t address, uint8_t value) {
 	}
 
 	assert(address <= videoTop);
-
+	
+	if (!breakpointsMemoryWrite.empty() && (breakpointsMemoryWrite.find(address) != breakpointsMemoryWrite.end())) {
+		if (callbackBreakpoint) {
+			callbackBreakpoint(BreakPoint::MemoryWrite, address, value);
+		}
+	}
+	
 	if (address < romSize) {
 		if (isRomWriteable) {
 			rom[address] = value;
@@ -1944,4 +1950,12 @@ void Emulator8080::interrupt(int interruptNum) {
 
 const std::vector<uint8_t> Emulator8080::getVideoRam() const {
 	return video;
+}
+
+void Emulator8080::addBreakpointMemoryWrite(uint16_t address) {
+	breakpointsMemoryWrite.insert(address);
+}
+
+void Emulator8080::setCallbackBreakpoint(CallbackBreakpoint callback) {
+	callbackBreakpoint = callback;
 }

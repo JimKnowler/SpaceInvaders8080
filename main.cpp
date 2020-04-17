@@ -65,7 +65,24 @@ public:
 		// space invaders
         initIO();
 
-		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 0x2400-0x2000, 0x4000-0x2400, true, true);		
+		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 0x2400-0x2000, 0x4000-0x2400, true, true);
+
+
+		// debugging 'credits' 
+		// address discovered by using old school 'Game Genie' method of looking for byte that changed when
+		// number of credits was incremented / decremented
+		emulator.addBreakpointMemoryWrite(8192 + 235);
+		emulator.setCallbackBreakpoint([&](Emulator8080::BreakPoint type, uint16_t address, uint16_t value) {
+			switch (type) {
+			case Emulator8080::BreakPoint::MemoryWrite:
+				printf("PC [0x%04x] changing num credits from [%u] to [%u]\n", emulator.getState().pc, emulator.readMemory(address), value);
+				break;
+			default:
+				printf("unknown breakpoint\n");
+			}
+
+			mode = Mode::Debugger;
+		});
 #endif
                 
 		timeLastInterrupt = getCurrentTime();
@@ -105,7 +122,16 @@ public:
 		bool isFrameComplete = false;
 
 		while (!isFrameComplete) {
-			step(10000);
+			const int kNumStepsPerChunk = 10000;
+
+			for (int i = 0; (i < kNumStepsPerChunk) && (mode == Mode::Run); i++) {
+				emulator.step();
+			}
+
+			if (mode == Mode::Debugger) {
+				// a breakpoint was fired
+				break;
+			}
 
 			auto currentTime = getCurrentTime();
 			const float elapsedTime = std::chrono::duration<float>(currentTime - timeLastInterrupt).count();
