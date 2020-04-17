@@ -75,7 +75,27 @@ public:
 
 		// PC where credits is decremented
 		emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x079b);
-#endif
+# endif
+
+
+# if 1
+		// debugging player scrolling left/right
+
+		// RunGameObjs
+		//emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x0248);
+
+		// DrawShiftedSprited
+		//emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x1400);
+
+		// MovePlayerRight
+		//emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x0381);
+		
+		// PC where shift register is output
+		//emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x1474);
+
+		// PC where Aliens are Counted
+		//emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x1605);
+# endif
 
 		// callback invoked when a breakpoint is reached
 		emulator.setCallbackBreakpoint([&](Emulator8080::BreakPoint type, uint16_t address, uint16_t value) {
@@ -95,6 +115,7 @@ public:
 #endif
                 
 		timeLastInterrupt = getCurrentTime();
+		interruptNum = 1;
 
         return true;
     }
@@ -152,7 +173,11 @@ public:
 			// Space Invaders - vblank/vhalf interrupts
 			if (elapsedTime > kFrameDuration) {
 				timeLastInterrupt = currentTime;
-				emulator.interrupt(2);
+				
+				emulator.interrupt(interruptNum);
+
+				alternateInterruptNum();
+
 				isFrameComplete = true;
 			}
 		}
@@ -400,6 +425,13 @@ private:
 	std::chrono::time_point<std::chrono::system_clock> getCurrentTime() const {
 		return std::chrono::system_clock::now();
 	}
+
+	void alternateInterruptNum() {
+		// interruptNum 1 => simulate vsync when beam is near the middle of the screen
+		// interruptNum 2 => simulate vsync when beam is near the bottom of the screen
+
+		interruptNum = (interruptNum == 1) ? 2 : 1;
+	}
     
     std::vector<uint8_t> rom;
     Emulator8080 emulator;
@@ -414,6 +446,7 @@ private:
 	Mode mode;
 
 	std::chrono::time_point<std::chrono::system_clock> timeLastInterrupt;
+	int interruptNum;
 };
 
 int main()
