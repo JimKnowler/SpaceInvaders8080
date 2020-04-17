@@ -701,7 +701,12 @@ void Emulator8080::step() {
 			writeMemory(address, state.b);
 			break;
 		}
-
+		case 0x71:						// MOV M, C
+		{
+			uint16_t address = getHL();
+			writeMemory(address, state.c);
+			break;
+		}
 		case 0x72:						// MOV M, D
 		{
 			uint16_t address = getHL();
