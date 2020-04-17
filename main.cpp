@@ -50,16 +50,11 @@ public:
         // fix stack pointer 
         rom[368] = 0x7;
 
-        // skip DAA test
-        rom[0x59c] = 0xc3;  // JMP
-        rom[0x59d] = 0xc2;
-        rom[0x59e] = 0x05;
-
 		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 2000, 0, false, true);
 
 		// run enough steps to complete test
 		// expect to see "CPU IS OPERATIONAL" in console TTY
-		step(610);
+		step(650);
 
 #else
 		// space invaders
@@ -68,14 +63,28 @@ public:
 		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 0x2400-0x2000, 0x4000-0x2400, true, true);
 
 
+# if 0
 		// debugging 'credits' 
-		// address discovered by using old school 'Game Genie' method of looking for byte that changed when
-		// number of credits was incremented / decremented
-		emulator.addBreakpointMemoryWrite(8192 + 235);
+
+		// address of 'credits' in memory discovered by using old school 'Game Genie' method of looking for byte that 
+		//   changed when number of credits was incremented / decremented
+		emulator.addBreakPoint(Emulator8080::BreakPoint::MemoryWrite, 8192 + 235);
+
+		// PC where credits is incremented
+		emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x0038);
+
+		// PC where credits is decremented
+		emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x079b);
+#endif
+
+		// callback invoked when a breakpoint is reached
 		emulator.setCallbackBreakpoint([&](Emulator8080::BreakPoint type, uint16_t address, uint16_t value) {
 			switch (type) {
 			case Emulator8080::BreakPoint::MemoryWrite:
-				printf("PC [0x%04x] changing num credits from [%u] to [%u]\n", emulator.getState().pc, emulator.readMemory(address), value);
+				printf("PC [0x%04x] Memory Write - address [0x%04x] - changing value from [%u] to [%u]\n", emulator.getState().pc, address, emulator.readMemory(address), value);
+				break;
+			case Emulator8080::BreakPoint::Opcode:
+				printf("PC [0x%04x] Opcode\n", address);
 				break;
 			default:
 				printf("unknown breakpoint\n");
@@ -113,7 +122,10 @@ public:
         DrawMemory("DE", emulator.getDE(), 10, 300);
         DrawStack(200, 200);
 		
+#ifndef CPUDIAG
+		// space invaders
 		DrawVideoRam(400, 10);
+#endif
 
         return true;
     }

@@ -321,6 +321,25 @@ void Emulator8080::step() {
 			opcodeSize = 2;
 			break;
 		}
+		case 0x27:						// DAA
+		{
+			//http://z80-heaven.wikidot.com/instructions-set:daa
+
+			// todo: implement auxilliary carry flag for DAA instruction
+			if (/*(1 == state.cc.ac) ||*/ (state.a & 0x0f) > 9) {
+				state.a += 6;
+
+				// todo: deal with this step causing state.cc.cy
+			}
+
+			if ((1 == state.cc.cy) || ((state.a & 0xf0) > 0x90)) {
+				state.a += 0x60;
+				state.cc.cy = 1;
+				updateZSP(state.a);
+			}
+
+			break;
+		}
 
 		case 0x29:						// DAD H
 		{
@@ -1779,7 +1798,12 @@ void Emulator8080::step() {
 
 	state.pc += uint16_t(opcodeSize);
 
-
+	// todo: remove RETURN statements within SWITCH, replace with "opcodeSize = 0" ?
+	if (!breakpointsOpcode.empty() && (breakpointsOpcode.find(state.pc) != breakpointsOpcode.end())) {
+		if (callbackBreakpoint) {
+			callbackBreakpoint(BreakPoint::Opcode, state.pc, 0);
+		}
+	}
 }
 
 void Emulator8080::updateZSP(uint16_t answer) {
@@ -1952,8 +1976,15 @@ const std::vector<uint8_t> Emulator8080::getVideoRam() const {
 	return video;
 }
 
-void Emulator8080::addBreakpointMemoryWrite(uint16_t address) {
-	breakpointsMemoryWrite.insert(address);
+void Emulator8080::addBreakPoint(BreakPoint type, uint16_t address) {
+	switch (type) {
+	case BreakPoint::MemoryWrite:
+		breakpointsMemoryWrite.insert(address);
+		break;
+	case BreakPoint::Opcode:
+		breakpointsOpcode.insert(address);
+		break;
+	}	
 }
 
 void Emulator8080::setCallbackBreakpoint(CallbackBreakpoint callback) {

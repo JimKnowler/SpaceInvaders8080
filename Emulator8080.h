@@ -75,16 +75,19 @@ public:
 	// get the current state of video ram
 	const std::vector<uint8_t> getVideoRam() const;
     
+    enum class BreakPoint {
+        MemoryWrite,
+        Opcode
+    };
+
     // add a breakpoint that is fired when an address is written to
-    void addBreakpointMemoryWrite(uint16_t address);
+    void addBreakPoint(BreakPoint type, uint16_t address);
 
     // CallbackBreakpoint - optional callback fired when a breakpoint is reached
-    enum class BreakPoint {
-        MemoryWrite
-    };
+    
     typedef std::function<void(BreakPoint type, uint16_t address, uint16_t value)> CallbackBreakpoint;
     void setCallbackBreakpoint(CallbackBreakpoint callback);
-    
+        
 private:
     void updateZSP(uint16_t answer);
     void updateCY(uint16_t value);
@@ -120,4 +123,5 @@ private:
     CallbackBreakpoint callbackBreakpoint;
 
     std::set<uint16_t> breakpointsMemoryWrite;
+    std::set<uint16_t> breakpointsOpcode;
 };
