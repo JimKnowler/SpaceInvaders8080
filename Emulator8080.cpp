@@ -1,6 +1,7 @@
 #include "Emulator8080.h"
 #include "Disassemble8080.h"
 #include "BuildOptions.h"
+#include "Utils.h"
 
 #include <cstring>
 #include <cassert>
@@ -20,16 +21,6 @@ namespace {
 		}
 
 		return (0 == (count & 0x1));
-	}
-
-	uint16_t makeWord(uint8_t hi, uint8_t lo) {
-		return (uint16_t(hi) << 8) | uint16_t(lo);
-	}
-
-	void swap(uint8_t& a, uint8_t& b) {
-		uint8_t temp = a;
-		a = b;
-		b = temp;
 	}
 }
 
@@ -98,15 +89,15 @@ void Emulator8080::step() {
 		}
 		case 0x02:						// STAX B
 		{
-			uint16_t address = getBC();
+			uint16_t address = state.getBC();
 			writeMemory(address, state.a);
 			break;
 		}
 		case 0x03:						// INX B
 		{
-			uint16_t value = getBC();
+			uint16_t value = state.getBC();
 			value += 1;
-			setBC(value);
+			state.setBC(value);
 			break;
 		}
 		case 0x04:						// INR B
@@ -138,24 +129,24 @@ void Emulator8080::step() {
 
 		case 0x09:						// DAD B
 		{
-			uint32_t hl = getHL();
-			uint32_t bc = getBC();
+			uint32_t hl = state.getHL();
+			uint32_t bc = state.getBC();
 			uint32_t value = hl + bc;
 			updateWordCY(value);
-			setHL(value & 0xffff);
+			state.setHL(value & 0xffff);
 			break;
 		}
 		case 0x0A:						// LDAX B
 		{
-			uint16_t address = getBC();
+			uint16_t address = state.getBC();
 			state.a = readMemory(address);
 			break;
 		}
 		case 0x0B:						// DCX B
 		{
-			uint16_t value = getBC();
+			uint16_t value = state.getBC();
 			value -= 1;
-			setBC(value);
+			state.setBC(value);
 			break;
 		}
 		case 0x0C:						// INR C
@@ -194,15 +185,15 @@ void Emulator8080::step() {
 		}
 		case 0x12:						// STAX D
 		{
-			uint16_t address = getDE();
+			uint16_t address = state.getDE();
 			writeMemory(address, state.a);
 			break;
 		}
 		case 0x13:						// INX D
 		{
-			uint16_t value = getDE();
+			uint16_t value = state.getDE();
 			value += 1;
-			setDE(value);
+			state.setDE(value);
 			break;
 		}
 		case 0x14:						// INR D
@@ -234,25 +225,25 @@ void Emulator8080::step() {
 
 		case 0x19:						// DAD D
 		{
-			uint32_t de = getDE();
-			uint32_t hl = getHL();
+			uint32_t de = state.getDE();
+			uint32_t hl = state.getHL();
 			uint32_t value = hl + de;
 			updateWordCY(value);
-			setHL(value& 0xffff);
+			state.setHL(value& 0xffff);
 			break;
 		}
 
 		case 0x1A:						// LDAX D
 		{
-			uint16_t address = getDE();
+			uint16_t address = state.getDE();
 			state.a = readMemory(address);
 			break;
 		}
 		case 0x1B:						// DCX D
 		{
-			uint16_t value = getDE();
+			uint16_t value = state.getDE();
 			value -= 1;
-			setDE(value);
+			state.setDE(value);
 			break;
 		}
 		case 0x1C:						// INR E
@@ -298,9 +289,9 @@ void Emulator8080::step() {
 		}
 		case 0x23:						// INX H
 		{
-			uint16_t value = getHL();
+			uint16_t value = state.getHL();
 			value += 1;
-			setHL(value);
+			state.setHL(value);
 			break;
 		}
 		case 0x24:						// INR H
@@ -343,10 +334,10 @@ void Emulator8080::step() {
 
 		case 0x29:						// DAD H
 		{
-			uint32_t hl = getHL();
+			uint32_t hl = state.getHL();
 			uint32_t value = hl + hl;
 			updateWordCY(value);
-			setHL(value & 0xffff);
+			state.setHL(value & 0xffff);
 			break;
 		}
 		case 0x2A:						// LHLD
@@ -359,9 +350,9 @@ void Emulator8080::step() {
 		}
 		case 0x2B:						// DCX H
 		{
-			uint16_t value = getHL();
+			uint16_t value = state.getHL();
 			value -= 1;
-			setHL(value);
+			state.setHL(value);
 			break;
 		}
 		case 0x2C:						// INR L
@@ -408,7 +399,7 @@ void Emulator8080::step() {
 		}
 		case 0x34:						// INR M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			uint16_t value = readMemory(address);
 			value += 1;
 			updateZSP(value);
@@ -417,7 +408,7 @@ void Emulator8080::step() {
 		}
 		case 0x35:						// DCR M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			uint16_t value = readMemory(address);
 			value -= 1;
 			updateZSP(value);
@@ -427,7 +418,7 @@ void Emulator8080::step() {
 		case 0x36:						// MVI M, D8
 		{
 			uint8_t value = opcode[1];
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			writeMemory(address, value);
 			opcodeSize = 2;
 			break;
@@ -440,9 +431,9 @@ void Emulator8080::step() {
 
 		case 0x39:						// DAD SP
 		{
-			uint32_t value = uint32_t(getHL()) + uint32_t(state.sp);
+			uint32_t value = uint32_t(state.getHL()) + uint32_t(state.sp);
 			updateWordCY(value);
-			setHL(uint16_t(value & 0xffff));
+			state.setHL(uint16_t(value & 0xffff));
 			break;
 		}
 		case 0x3a:						// LDA word
@@ -501,7 +492,7 @@ void Emulator8080::step() {
 		}
 		case 0x46:						// MOV B, M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			state.b = readMemory(address);
 			break;
 		}
@@ -538,7 +529,7 @@ void Emulator8080::step() {
 		}
 		case 0x4E:						// MOV C, M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			state.c = readMemory(address);
 			break;
 		}
@@ -575,7 +566,7 @@ void Emulator8080::step() {
 		}
 		case 0x56:						// MOV D, M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			state.d = readMemory(address);
 			break;
 		}
@@ -612,7 +603,7 @@ void Emulator8080::step() {
 		}
 		case 0x5E:						// MOV E, M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			state.e = readMemory(address);			
 			break;
 		}
@@ -649,7 +640,7 @@ void Emulator8080::step() {
 		}
 		case 0x66:						// MOV H, M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			state.h = readMemory(address);
 			break;
 		}
@@ -686,7 +677,7 @@ void Emulator8080::step() {
 
 		case 0x6E:						// MOV L, M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			state.l = readMemory(address);
 			break;
 		}
@@ -697,44 +688,44 @@ void Emulator8080::step() {
 		}
 		case 0x70:						// MOV M, B
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			writeMemory(address, state.b);
 			break;
 		}
 		case 0x71:						// MOV M, C
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			writeMemory(address, state.c);
 			break;
 		}
 		case 0x72:						// MOV M, D
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			writeMemory(address, state.d);
 			break;
 		}
 		case 0x73:						// MOV M, E
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			writeMemory(address, state.e);
 			break;
 		}
 		case 0x74:						// MOV M, H
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			writeMemory(address, state.h);
 			break;
 		}
 		case 0x75:						// MOV M, L
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			writeMemory(address, state.l);
 			break;
 		}
 
 		case 0x77:						// MOV M, A
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			writeMemory(address, state.a);
 			break;
 		}
@@ -770,7 +761,7 @@ void Emulator8080::step() {
 		}
 		case 0x7E:						// MOV A, M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			state.a = readMemory(address);
 			break;
 		}
@@ -824,7 +815,7 @@ void Emulator8080::step() {
 		}
 		case 0x86:						// ADD M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			uint16_t answer = uint16_t(state.a) + uint16_t(readMemory(address));
 			updateZSP(answer);
 			updateCY(answer);
@@ -889,7 +880,7 @@ void Emulator8080::step() {
 		}
 		case 0x8e:
 		{								// ADC M
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			uint16_t value = state.a + uint16_t(readMemory(address)) + uint16_t(state.cc.cy);
 			updateCY(value);
 			updateZSP(value);
@@ -954,7 +945,7 @@ void Emulator8080::step() {
 		}
 		case 0x96:						// SUB M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			uint16_t answer = uint16_t(state.a) - uint16_t(readMemory(address));
 			updateZSP(answer);
 			updateCY(answer);
@@ -1019,7 +1010,7 @@ void Emulator8080::step() {
 		}
 		case 0x9e:						// SBB M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			uint16_t answer = uint16_t(state.a) - uint16_t(readMemory(address)) - uint16_t(state.cc.cy);
 			updateZSP(answer);
 			updateCY(answer);
@@ -1078,7 +1069,7 @@ void Emulator8080::step() {
 		}
 		case 0xA6:						// ANA M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			state.a &= readMemory(address);
 			updateZSP(state.a);
 			updateCY(state.a);
@@ -1135,7 +1126,7 @@ void Emulator8080::step() {
 		}
 		case 0xAE:						// XRA M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			state.a = state.a ^ readMemory(address);
 			updateZSP(state.a);
 			updateCY(state.a);
@@ -1192,7 +1183,7 @@ void Emulator8080::step() {
 		}
 		case 0xB6:						// ORA M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			state.a = state.a | readMemory(address);
 			updateZSP(state.a);
 			updateCY(state.a);
@@ -1249,7 +1240,7 @@ void Emulator8080::step() {
 		}
 		case 0xBE:						// CMP M
 		{
-			uint16_t address = getHL();
+			uint16_t address = state.getHL();
 			uint16_t value = uint16_t(state.a) - uint16_t(readMemory(address));
 			updateZSP(value);
 			updateCY(value);
@@ -1380,7 +1371,7 @@ void Emulator8080::step() {
 
 				if (state.c == 9)
 				{
-					uint16_t offset = getDE();
+					uint16_t offset = state.getDE();
 
 					offset += 3;		// skip prefix bytes
 
@@ -1760,7 +1751,7 @@ void Emulator8080::step() {
 		}
 		case 0xF9:						// SPHL
 		{
-			state.sp = getHL();
+			state.sp = state.getHL();
 			break;
 		}
 		case 0xFA:						// JM
@@ -1918,38 +1909,7 @@ uint8_t Emulator8080::readMemory(uint16_t address) const {
 	}
 }
 
-uint16_t Emulator8080::getDE() const {
-	uint16_t value = makeWord(state.d, state.e);
 
-	return value;
-}
-
-void Emulator8080::setDE(uint16_t value) {
-	state.d = uint8_t((value >> 8) & 0xff);
-	state.e = uint8_t(value & 0xff);
-}
-
-uint16_t Emulator8080::getHL() const {
-	uint16_t value = makeWord(state.h, state.l);
-
-	return value;
-}
-
-void Emulator8080::setHL(uint16_t value) {
-	state.h = uint8_t((value >> 8) & 0xff);
-	state.l = uint8_t(value & 0xff);
-}
-
-uint16_t Emulator8080::getBC() const {
-	uint16_t value = makeWord(state.b, state.c);
-
-	return value;
-}
-
-void Emulator8080::setBC(uint16_t value) {
-	state.b = uint8_t((value >> 8) & 0xff);
-	state.c = uint8_t(value & 0xff);
-}
 
 void Emulator8080::call(uint16_t address, uint16_t returnAddress) {
 	uint8_t rethi = uint8_t((returnAddress >> 8) & 0xff);

@@ -36,6 +36,14 @@ public:
     };
 
     struct State {
+        uint16_t getHL() const;
+        uint16_t getDE() const;
+        uint16_t getBC() const;
+
+        void setDE(uint16_t value);
+        void setHL(uint16_t value);
+        void setBC(uint16_t value);
+
         uint8_t     a;
         uint8_t     b;
         uint8_t     c;
@@ -57,22 +65,17 @@ public:
     // get byte from memory
     uint8_t readMemory(uint16_t address) const;
 
-    // get HL
-    uint16_t getHL() const;
-
-    // get DE
-    uint16_t getDE() const;
-
-    // get BC
-    uint16_t getBC() const;
+   
 
 	// get address at top of RAM
+    /// @todo: move to memory.size() ?
 	uint16_t getRamTop() const;
 
 	// trigger interrupt on CPU
 	void interrupt(int interruptNum);
 
 	// get the current state of video ram
+    /// @todo replace by using readMemory()
 	const std::vector<uint8_t> getVideoRam() const;
     
     enum class BreakPoint {
@@ -94,10 +97,7 @@ private:
     void updateWordCY(uint32_t value);
     size_t unimplementedOpcode(uint16_t pc);
     uint16_t readOpcodeD16(uint8_t* opcode);
-    void writeMemory(uint16_t address, uint8_t value);
-    void setDE(uint16_t value);
-    void setHL(uint16_t value);
-	void setBC(uint16_t value);
+    void writeMemory(uint16_t address, uint8_t value);    
     void call(uint16_t address, uint16_t returnAddress);
     void ret();
     
