@@ -60,7 +60,7 @@ uint64_t Emulator8080::getNumSteps() const {
 	return numSteps;
 }
 
-const Emulator8080::State& Emulator8080::getState() const {
+const State& Emulator8080::getState() const {
 	return state;
 }
 
@@ -1683,7 +1683,7 @@ void Emulator8080::step() {
 		case 0xF1:						// POP PSW
 		{
 			uint8_t flags = readMemory(state.sp);
-			state.cc = *reinterpret_cast<ConditionCodes*>(&flags);
+			state.cc = *reinterpret_cast<State::ConditionCodes*>(&flags);
 			state.a = readMemory(state.sp + 1);
 			state.sp += 2;
 

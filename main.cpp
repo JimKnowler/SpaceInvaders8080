@@ -315,7 +315,7 @@ private:
 
         DrawString({ x, y }, "CPU State");
 
-        const Emulator8080::State& state = emulator.getState();
+        const State& state = emulator.getState();
         uint64_t numSteps = emulator.getNumSteps();
 
         std::vector<std::string> reports = {
@@ -344,7 +344,7 @@ private:
     void DrawOpcodes(int x, int y) {
         DrawString({ x, y }, "Opcodes");
         
-        const Emulator8080::State& state = emulator.getState();        
+        const State& state = emulator.getState();        
         uint16_t pc = state.pc;
 
         y += 10;
@@ -379,7 +379,7 @@ private:
     void DrawStack(int x, int y) {
         DrawString({ x, y }, "Stack");
 
-        const Emulator8080::State& state = emulator.getState();
+        const State& state = emulator.getState();
         uint16_t sp = state.sp;
         uint16_t address = sp & ~3;
 
