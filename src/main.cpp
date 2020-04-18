@@ -30,8 +30,9 @@ public:
         sAppName = "Emulator 8080 - SpaceInvaders";
     }
 
+	/// @brief called once at start		
     bool OnUserCreate() override {
-        // called once at start		
+        
 		mode = Mode::Debugger;
 
 #ifdef CPUDIAG
@@ -63,8 +64,8 @@ public:
         return true;
     }
 
+	/// @brief called every frame
     bool OnUserUpdate(float fElapsedTime) override {
-        // update
 		updateInput();
 		
 		switch (mode) {
@@ -76,10 +77,9 @@ public:
 				break;
 		}
 	
-        // render
         FillRect({ 0,0 }, { ScreenWidth(), ScreenHeight() }, olc::BLUE);
 
-		DrawString({ 10,10 }, FormatBuffer("Mode [%s]", (mode == Mode::Debugger) ? "DEBUGGER" : "RUN"));
+		DrawString({ 10,10 }, PrepareString("Mode [%s]", (mode == Mode::Debugger) ? "DEBUGGER" : "RUN"));
         DrawCPU(10,40);
         DrawOpcodes(200,40);
         DrawMemory("HL", emulator.getState().hl, 10, 200);
@@ -137,7 +137,6 @@ public:
 			numSteps *= 10;
 
 			if (GetKey(olc::CTRL).bHeld) {
-				// CTRL + SHIFT + SPACE
 				numSteps *= 100;
 			}
 		}
@@ -186,7 +185,6 @@ private:
 	}
 
 	void initSpaceInvaders() {
-		// space invaders
 		initIO();
 
 		const char* kRomFilename = "./roms/spaceinvaders/invaders.concatenated";
@@ -220,8 +218,8 @@ private:
 		emulator.init(&memory, 0);
 	}
 
+	/// @brief Initialise I/O as expected for Space Invaders arcade machine
     void initIO() {
-		// space invaders 
 		emulator.setCallbackIn([this](uint8_t port) -> uint8_t {
 			//printf("IN port %u\n", port);
 
@@ -292,25 +290,24 @@ private:
     }
     
     void DrawCPU(int x, int y) {
-
         DrawString({ x, y }, "CPU State");
 
         const cpu::State& state = emulator.getState();
         uint64_t numSteps = emulator.getNumSteps();
 
         std::vector<std::string> reports = {
-            FormatBuffer("step: %llu", numSteps),
-            FormatBuffer("   a: 0x%02x", state.a),
-            FormatBuffer("  bc: 0x%02x%02x", state.b, state.c),
-            FormatBuffer("  de: 0x%02x%02x", state.d, state.e),
-            FormatBuffer("  hl: 0x%02x%02x", state.h, state.l),
-            FormatBuffer("  pc: 0x%04x", state.pc),
-            FormatBuffer("  sp: 0x%04x", state.sp),
-            FormatBuffer("   z: %u", state.cc.z),
-            FormatBuffer("   s: %u", state.cc.s),
-            FormatBuffer("   p: %u", state.cc.p),
-            FormatBuffer("  cy: %u", state.cc.cy),
-            FormatBuffer("  ac: %u", state.cc.ac),
+            PrepareString("step: %llu", numSteps),
+            PrepareString("   a: 0x%02x", state.a),
+            PrepareString("  bc: 0x%02x%02x", state.b, state.c),
+            PrepareString("  de: 0x%02x%02x", state.d, state.e),
+            PrepareString("  hl: 0x%02x%02x", state.h, state.l),
+            PrepareString("  pc: 0x%04x", state.pc),
+            PrepareString("  sp: 0x%04x", state.sp),
+            PrepareString("   z: %u", state.cc.z),
+            PrepareString("   s: %u", state.cc.s),
+            PrepareString("   p: %u", state.cc.p),
+            PrepareString("  cy: %u", state.cc.cy),
+            PrepareString("  ac: %u", state.cc.ac),
         };
 
         y += 10;
@@ -332,7 +329,7 @@ private:
             std::string instruction;
             uint16_t opcodeSize = Disassemble8080::dissassembleOpcode(&memory, pc, instruction);
             
-            DrawString({ x + 10, y }, FormatBuffer("0x%04x %s", pc, instruction.c_str()));
+            DrawString({ x + 10, y }, PrepareString("0x%04x %s", pc, instruction.c_str()));
             y += 10;
 
             pc += opcodeSize;
@@ -340,7 +337,7 @@ private:
     }
 
     void DrawMemory(const char* label, uint16_t address, int x, int y) {
-        DrawString({ x, y }, FormatBuffer("Memory (%s)", label));
+        DrawString({ x, y }, PrepareString("Memory (%s)", label));
 
         // 4 byte alignment
         address &= ~3;
@@ -348,7 +345,7 @@ private:
         if (address < memory.size()) {
             y += 10;
             for (int i = 0; i < 8; i++) {
-                DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, memory.read(address), memory.read(address + 1), memory.read(address + 2), memory.read(address + 3)));
+                DrawString({ x + 10, y }, PrepareString("0x%04x %02x %02x %02x %02x", address, memory.read(address), memory.read(address + 1), memory.read(address + 2), memory.read(address + 3)));
 
                 y += 10;
                 address += 4;
@@ -368,7 +365,7 @@ private:
 			if (address >= memory.size()) {
 				break;
 			}
-            DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, memory.read(address), memory.read(address + 1), memory.read(address + 2), memory.read(address + 3)));
+            DrawString({ x + 10, y }, PrepareString("0x%04x %02x %02x %02x %02x", address, memory.read(address), memory.read(address + 1), memory.read(address + 2), memory.read(address + 3)));
 
             y += 10;
             address += 4;
@@ -394,7 +391,7 @@ private:
 		}
 	}
 
-    std::string FormatBuffer(const char* format, ...) {        
+    std::string PrepareString(const char* format, ...) {        
         char buffer[256];
         va_list args;
         va_start(args, format);
