@@ -20,9 +20,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Disassemble8080.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\olcPGEX_Gamepad.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -50,6 +47,15 @@
     <ClInclude Include="src\util\Utils.h">
       <Filter>src\util</Filter>
     </ClInclude>
+    <ClInclude Include="src\Disassemble8080.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\memory\IMemory.h">
+      <Filter>src\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="src\memory\Memory.h">
+      <Filter>src\memory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Disassemble8080.cpp">
@@ -75,6 +81,9 @@
     </ClCompile>
     <ClCompile Include="src\util\Utils.cpp">
       <Filter>src\util</Filter>
+    </ClCompile>
+    <ClCompile Include="src\memory\Memory.cpp">
+      <Filter>src\memory</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -11,4 +11,7 @@ namespace util {
 
 	// return true if value has an even number of bits set to 1
 	bool parity(uint16_t value);
+
+	// measure size of file
+	size_t getFileSize(const char* filename);
 }

@@ -9,42 +9,26 @@
 
 namespace cpu {
 
-	CPU::CPU() {	
+	CPU::CPU() : memory(nullptr), numSteps(0) {	
 		state.reset();
-
-		rom = 0;
-		romSize = 0;		
-		numSteps = 0;
-
-		isRamMirrorEnabled = false;
-		isRomWriteable = false;
-
-		ramSize = 0;
-		workTop = 0;
-		videoTop = 0;
 	}
 
-	void CPU::init(uint8_t* inRom, uint16_t inRomSize, uint16_t inPc, uint16_t inWorkSize, uint16_t inVideoSize, bool inIsRamMirrorEnabled, bool inIsRomWriteable) {
-		rom = inRom;
-		romSize = inRomSize;
-		state.pc = inPc;
-
-		work.resize(inWorkSize, 0xfe);
-		video.resize(inVideoSize, 0xfe);
-
-		workTop = inRomSize + inWorkSize;
-		videoTop = workTop + inVideoSize;
-		isRamMirrorEnabled = inIsRamMirrorEnabled;
-		isRomWriteable = inIsRomWriteable;
+	void CPU::init(memory::IMemory* inMemory, uint16_t pcStart) {		
+		memory = inMemory;
+		state.pc = pcStart;		
 		numSteps = 0;
 	}
 
 	void CPU::setCallbackIn(CallbackIn callback) {
-		callbackIn = callback;
+		callbacks.in = callback;
 	}
 
 	void CPU::setCallbackOut(CallbackOut callback) {
-		callbackOut = callback;
+		callbacks.out = callback;
+	}
+
+	void CPU::setCallbackBreakpoint(CallbackBreakpoint callback) {
+		callbacks.breakpoint = callback;
 	}
 
 	uint64_t CPU::getNumSteps() const {
@@ -58,7 +42,7 @@ namespace cpu {
 	void CPU::step() {
 		numSteps += 1;
 
-		uint8_t* opcode = rom + state.pc;
+		uint8_t opcode = readMemory(state.pc);
 	
 		size_t opcodeSize = 1;
 
@@ -68,13 +52,13 @@ namespace cpu {
 		printf("pc[0x%04x] opcode[0x%02x] %s\n", state.pc, *opcode, strOpcode.c_str());
 	#endif
 
-		switch (*opcode) {
+		switch (opcode) {
 			case 0x00:						// NOP 
 				break;
 			case 0x01:						// LXI B, D16
 			{
-				state.c = opcode[1];
-				state.b = opcode[2];
+				state.c = readMemory(state.pc + 1);
+				state.b = readMemory(state.pc + 2);
 				opcodeSize = 3;
 				break;
 			}
@@ -106,7 +90,7 @@ namespace cpu {
 			}
 			case 0x06:						// MVI B, D8
 			{
-				state.b = opcode[1];
+				state.b = readMemory(state.pc + 1);
 				opcodeSize = 2;
 				break;
 			}
@@ -154,7 +138,7 @@ namespace cpu {
 			}
 			case 0x0E:						// MVI C, D8
 			{
-				state.c = opcode[1];
+				state.c = readMemory(state.pc + 1);
 				opcodeSize = 2;
 				break;
 			}
@@ -169,8 +153,8 @@ namespace cpu {
 
 			case 0x11:						// LXI D, D16
 			{
-				state.d = opcode[2];
-				state.e = opcode[1];			
+				state.d = readMemory(state.pc + 2);
+				state.e = readMemory(state.pc + 1);			
 				opcodeSize = 3;
 				break;
 			}
@@ -201,7 +185,7 @@ namespace cpu {
 			}
 			case 0x16:						// MVI D, D8
 			{
-				state.d = opcode[1];
+				state.d = readMemory(state.pc + 1);
 				opcodeSize = 2;
 				break;
 			}
@@ -251,7 +235,7 @@ namespace cpu {
 			}
 			case 0x1E:						// MVI E, D8
 			{
-				state.e = opcode[1];
+				state.e = readMemory(state.pc + 1);
 				opcodeSize = 2;
 				break;
 			}
@@ -265,14 +249,14 @@ namespace cpu {
 
 			case 0x21:						// LXI H, D16
 			{
-				state.h = opcode[2];
-				state.l = opcode[1];			
+				state.h = readMemory(state.pc + 2);
+				state.l = readMemory(state.pc + 1);			
 				opcodeSize = 3;
 				break;
 			}
 			case 0x22:						// SHLD
 			{
-				uint16_t address = readOpcodeD16(opcode);
+				uint16_t address = readOpcodeDataWord();
 				writeMemory(address, state.l);
 				writeMemory(address + 1, state.h);
 				opcodeSize = 3;
@@ -299,7 +283,7 @@ namespace cpu {
 			}
 			case 0x26:						// MVI H, D8
 			{
-				state.h = opcode[1];
+				state.h = readMemory(state.pc + 1);
 				opcodeSize = 2;
 				break;
 			}
@@ -333,7 +317,7 @@ namespace cpu {
 			}
 			case 0x2A:						// LHLD
 			{
-				uint16_t address = readOpcodeD16(opcode);
+				uint16_t address = readOpcodeDataWord();
 				state.l = readMemory(address);
 				state.h = readMemory(address + 1);
 				opcodeSize = 3;
@@ -360,7 +344,7 @@ namespace cpu {
 			}
 			case 0x2E:						// MVI L, D8
 			{
-				state.l = opcode[1];
+				state.l = readMemory(state.pc + 1);
 				opcodeSize = 2;
 				break;
 			}
@@ -372,13 +356,13 @@ namespace cpu {
 
 			case 0x31:						// LXI SP, D16
 			{
-				state.sp = readOpcodeD16(opcode);
+				state.sp = readOpcodeDataWord();
 				opcodeSize = 3;
 				break;
 			}
 			case 0x32:						// STA adr
 			{
-				uint16_t address = readOpcodeD16(opcode);
+				uint16_t address = readOpcodeDataWord();
 				writeMemory(address, state.a);
 				opcodeSize = 3;
 				break;
@@ -408,7 +392,7 @@ namespace cpu {
 			}
 			case 0x36:						// MVI M, D8
 			{
-				uint8_t value = opcode[1];
+				uint8_t value = readMemory(state.pc + 1);
 				uint16_t address = state.hl;
 				writeMemory(address, value);
 				opcodeSize = 2;
@@ -429,7 +413,7 @@ namespace cpu {
 			}
 			case 0x3a:						// LDA word
 			{
-				uint16_t address = readOpcodeD16(opcode);
+				uint16_t address = readOpcodeDataWord();
 				state.a = readMemory(address);
 
 				opcodeSize = 3;
@@ -456,7 +440,7 @@ namespace cpu {
 
 			case 0x3e:						// MVI A, byte
 			{
-				uint8_t value = opcode[1];
+				uint8_t value = readMemory(state.pc + 1);
 				state.a = value;
 
 				opcodeSize = 2;
@@ -1262,7 +1246,7 @@ namespace cpu {
 			case 0xC2:						// JNZ adr
 			{
 				if (0 == state.cc.z) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					state.pc = address;
 					opcodeSize = 0;
 				}
@@ -1274,7 +1258,7 @@ namespace cpu {
 			}
 			case 0xC3:						// JMP adr
 			{
-				uint16_t address = readOpcodeD16(opcode);
+				uint16_t address = readOpcodeDataWord();
 				state.pc = address;
 				opcodeSize = 0;
 				break;
@@ -1282,7 +1266,7 @@ namespace cpu {
 			case 0xC4:						// CNZ adr
 			{
 				if (state.cc.z == 0) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					uint16_t returnAddress = state.pc + 3;
 					call(address, returnAddress);
 					opcodeSize = 0;
@@ -1302,7 +1286,7 @@ namespace cpu {
 			}
 			case 0xC6:						// ADI byte
 			{
-				uint16_t answer = uint16_t(state.a) + uint16_t(opcode[1]);
+				uint16_t answer = uint16_t(state.a) + uint16_t(readMemory(state.pc + 1));
 				state.cc.updateByteZSP(answer);
 				state.cc.updateByteCY(answer);
 				state.a = uint8_t(answer & 0xff);
@@ -1327,7 +1311,7 @@ namespace cpu {
 			case 0xCA:						// JZ adr
 			{
 				if (state.cc.z != 0) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					state.pc = address;
 					opcodeSize = 0;
 				} else {
@@ -1340,7 +1324,7 @@ namespace cpu {
 			case 0xCC:						// CZ adr
 			{
 				if (state.cc.z == 1) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					uint16_t returnAddress = state.pc + 3;
 					call(address, returnAddress);
 					opcodeSize = 0;
@@ -1354,7 +1338,7 @@ namespace cpu {
 			case 0xCD:						// CALL adr
 			{
 
-				uint16_t address = readOpcodeD16(opcode);
+				uint16_t address = readOpcodeDataWord();
 	#ifdef CPUDIAG
 				if (5 == address)
 				{
@@ -1400,7 +1384,7 @@ namespace cpu {
 			case 0xCE:						// ACI D8
 			{
 				uint16_t value = state.a;
-				value += uint16_t(opcode[1]);
+				value += uint16_t(readMemory(state.pc + 1));
 				value += uint16_t(state.cc.cy);
 				state.cc.updateByteCY(value);
 				state.cc.updateByteZSP(value);
@@ -1428,7 +1412,7 @@ namespace cpu {
 			case 0xD2:						// JNC adr
 			{
 				if (state.cc.cy == 0) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					state.pc = address;
 					opcodeSize = 0;
 				}
@@ -1440,9 +1424,9 @@ namespace cpu {
 			}
 			case 0xD3:						// OUT D8 (special)
 			{
-				uint8_t data = opcode[1];
-				if (callbackOut) {
-					callbackOut(data, state.a);
+				uint8_t data = readMemory(state.pc + 1);
+				if (callbacks.out) {
+					callbacks.out(data, state.a);
 				}
 				opcodeSize = 2;
 				break;
@@ -1450,7 +1434,7 @@ namespace cpu {
 			case 0xD4:						// CNC adr
 			{
 				if (state.cc.cy == 0) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					uint16_t returnAddress = state.pc + 3;
 					call(address, returnAddress);
 					opcodeSize = 0;
@@ -1470,7 +1454,7 @@ namespace cpu {
 			}
 			case 0xD6:						// SUI D8
 			{
-				uint8_t data = opcode[1];
+				uint8_t data = readMemory(state.pc + 1);
 				uint16_t value = uint16_t(state.a) - uint16_t(data);
 				state.cc.updateByteCY(value);
 				state.cc.updateByteZSP(value);
@@ -1493,7 +1477,7 @@ namespace cpu {
 			case 0xDA:						// JC addr
 			{
 				if (state.cc.cy == 1) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					state.pc = address;
 					opcodeSize = 0;
 				}
@@ -1504,9 +1488,9 @@ namespace cpu {
 			}
 			case 0xDB:						// IN D8 (special)
 			{
-				uint8_t port = opcode[1];
-				if (callbackIn) {
-					state.a = callbackIn(port);
+				uint8_t port = readMemory(state.pc + 1);
+				if (callbacks.in) {
+					state.a = callbacks.in(port);
 				}
 				opcodeSize = 2;
 				break;
@@ -1514,7 +1498,7 @@ namespace cpu {
 			case 0xDC:						// CC adr
 			{
 				if (state.cc.cy == 1) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					uint16_t returnAddress = state.pc + 3;
 					call(address, returnAddress);
 					opcodeSize = 0;
@@ -1528,7 +1512,7 @@ namespace cpu {
 
 			case 0xDE:						// SBI D8
 			{
-				uint8_t data = opcode[1];
+				uint8_t data = readMemory(state.pc + 1);
 				uint16_t value = uint16_t(state.a) - uint16_t(data) - uint16_t(state.cc.cy);
 				state.cc.updateByteCY(value);
 				state.cc.updateByteZSP(value);
@@ -1556,7 +1540,7 @@ namespace cpu {
 			case 0xE2:						// JPO
 			{
 				if (state.cc.p == 0) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					state.pc = address;
 					opcodeSize = 0;
 				}
@@ -1578,7 +1562,7 @@ namespace cpu {
 			case 0xE4:						// CPO adr
 			{
 				if (state.cc.p == 0) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					uint16_t returnAddress = state.pc + 3;
 					call(address, returnAddress);
 					opcodeSize = 0;
@@ -1597,7 +1581,7 @@ namespace cpu {
 			}
 			case 0xE6:						// ANI D8
 			{
-				uint16_t value = uint16_t(state.a) & uint16_t(opcode[1]);
+				uint16_t value = uint16_t(state.a) & uint16_t(readMemory(state.pc + 1));
 				state.cc.updateByteZSP(value);
 				state.cc.updateByteCY(value);
 				state.a = uint8_t(value & 0xff);
@@ -1622,7 +1606,7 @@ namespace cpu {
 			case 0xEA:						// JPE adr
 			{
 				if (state.cc.p == 1) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					state.pc = address;
 					opcodeSize = 0;
 				}
@@ -1640,7 +1624,7 @@ namespace cpu {
 			case 0xEC:						// CPE adr
 			{
 				if (state.cc.p == 1) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					uint16_t returnAddress = state.pc + 3;
 					call(address, returnAddress);
 					opcodeSize = 0;
@@ -1654,7 +1638,7 @@ namespace cpu {
 
 			case 0xEE:						// XRI
 			{
-				state.a ^= opcode[1];
+				state.a ^= readMemory(state.pc + 1);
 				state.cc.updateByteCY(state.a);
 				state.cc.updateByteZSP(state.a);
 
@@ -1683,7 +1667,7 @@ namespace cpu {
 			case 0xF2:						// JP
 			{
 				if (state.cc.s == 0) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					state.pc = address;
 					opcodeSize = 0;
 				}
@@ -1703,7 +1687,7 @@ namespace cpu {
 			case 0xF4:						// CP
 			{
 				if (state.cc.s == 0) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					uint16_t returnAddress = state.pc + 3;
 					call(address, returnAddress);
 					opcodeSize = 0;
@@ -1723,7 +1707,7 @@ namespace cpu {
 			}
 			case 0xF6:						// ORI D8
 			{
-				uint8_t data = opcode[1];
+				uint8_t data = readMemory(state.pc + 1);
 				uint8_t value = state.a | data;
 				state.cc.updateByteCY(value);
 				state.cc.updateByteZSP(value);
@@ -1748,7 +1732,7 @@ namespace cpu {
 			case 0xFA:						// JM
 			{
 				if (state.cc.s == 1) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					state.pc = address;
 					opcodeSize = 0;
 				}
@@ -1766,7 +1750,7 @@ namespace cpu {
 			case 0xFC:						// CM addr
 			{
 				if (state.cc.s == 1) {
-					uint16_t address = readOpcodeD16(opcode);
+					uint16_t address = readOpcodeDataWord();
 					uint16_t returnAddress = state.pc + 3;
 					call(address, returnAddress);
 					opcodeSize = 0;
@@ -1780,7 +1764,7 @@ namespace cpu {
 
 			case 0xFE:						// CPI D8
 			{
-				uint16_t value = uint16_t(state.a) - uint16_t(opcode[1]);
+				uint16_t value = uint16_t(state.a) - uint16_t(readMemory(state.pc + 1));
 				state.cc.updateByteZSP(value);
 				state.cc.updateByteCY(value);
 
@@ -1796,94 +1780,51 @@ namespace cpu {
 		state.pc += uint16_t(opcodeSize);
 
 		if (!breakpoints.opcode.empty() && (breakpoints.opcode.find(state.pc) != breakpoints.opcode.end())) {
-			if (callbackBreakpoint) {
+			if (callbacks.breakpoint) {
 				Breakpoint breakpoint(Breakpoint::Type::Opcode, state.pc);
-				callbackBreakpoint(breakpoint, 0);
+				callbacks.breakpoint(breakpoint, 0);
 			}
 		}
 	}
 
 	size_t CPU::unimplementedOpcode(uint16_t pc) {
-		assert(pc < romSize);
-
-		uint8_t* opcode = rom + pc;
-
 		std::string strOpcode;
-		size_t numBytes = Disassemble8080::dissassembleOpcode(opcode, strOpcode);
+		size_t numBytes = Disassemble8080::dissassembleOpcode(memory, pc, strOpcode);
 
-
-		printf("unimplemented Instruction: %04x 0x%02x %s\n", pc, *opcode, strOpcode.c_str());
+		printf("unimplemented Instruction: %04x 0x%02x %s\n", pc, memory->read(pc), strOpcode.c_str());
 
 		return numBytes;
 	}
 
-	uint16_t CPU::readOpcodeD16(uint8_t* opcode) {
-		uint16_t value = util::makeWord(opcode[2], opcode[1]);
+	uint16_t CPU::readOpcodeDataWord() const {
+		uint16_t value = util::makeWord(
+							readMemory(state.pc + 2),
+							readMemory(state.pc + 1)
+							);
 
 		return value;
 	}
 
-	void CPU::writeMemory(uint16_t address, uint8_t value) {
-		if (isRamMirrorEnabled) {
-			while (address >= videoTop) {
-				// handle mirroring of RAM above end of video ram
-				address -= ramSize;
+	void CPU::writeMemory(uint16_t inAddress, uint8_t value) {
+		uint16_t address = memory->translate(inAddress);
+		
+		/// @todo consider whether to invoke this breakpoint before OR after the write
+		if (!breakpoints.memoryWrite.empty() && (breakpoints.memoryWrite.find(address) != breakpoints.memoryWrite.end())) {
+			if (callbacks.breakpoint) {
+				Breakpoint breakpoint(Breakpoint::Type::MemoryWrite, address);
+				callbacks.breakpoint(breakpoint, value);
 			}
 		}
 
-		assert(address <= videoTop);
-	
-		if (!breakpoints.memoryWrite.empty() && (breakpoints.memoryWrite.find(address) != breakpoints.memoryWrite.end())) {
-			if (callbackBreakpoint) {
-				Breakpoint breakpoint(Breakpoint::Type::MemoryWrite, address);
-				callbackBreakpoint(breakpoint, value);
-			}
-		}
-	
-		if (address < romSize) {
-			if (isRomWriteable) {
-				rom[address] = value;
-			}
-			else {
-				assert(!"unable to write to address in ROM");
-			}
-		} else if (address < workTop) {
-			// work RAM
-			uint16_t workAddress = address - romSize;
-			work[workAddress] = value;
-		}
-		else {
-			// video RAM
-			uint16_t videoAddress = address - workTop;
-			video[videoAddress] = value;
-		}
+		memory->write(address, value);		
 	}
 
-	uint8_t CPU::readMemory(uint16_t address) const {
-		if (isRamMirrorEnabled) {
-			while (address >= videoTop) {
-				// handle mirroring of RAM above video RAM
-				address -= ramSize;
-			}
-		}
+	uint8_t CPU::readMemory(uint16_t inAddress) const {
+		uint16_t address = memory->translate(inAddress);
 
-		assert(address <= videoTop);
+		uint8_t value = memory->read(address);
 
-		if (address < romSize) {
-			return rom[address];
-		} else if (address < workTop) {
-			// work RAM
-			uint16_t workAddress = address - romSize;
-		
-			return work[workAddress];
-		}
-		else {
-			// video RAM
-
-			uint16_t videoAddress = address - workTop;
-
-			return video[videoAddress];
-		}
+		return value;
 	}
 
 	void CPU::call(uint16_t address, uint16_t returnAddress) {
@@ -1902,10 +1843,6 @@ namespace cpu {
 		state.sp += 2;
 	}
 
-	uint16_t CPU::getRamTop() const {
-		return videoTop;
-	}
-
 	void CPU::interrupt(int interruptNum) {
 		if (!state.interruptsEnabled) {
 			return;
@@ -1921,10 +1858,6 @@ namespace cpu {
 		state.pc = 8 * interruptNum;
 	}
 
-	const std::vector<uint8_t> CPU::getVideoRam() const {
-		return video;
-	}
-
 	void CPU::addBreakpoint(const Breakpoint& breakpoint) {
 		switch (breakpoint.type) {
 		case Breakpoint::Type::MemoryWrite:
@@ -1934,10 +1867,5 @@ namespace cpu {
 			breakpoints.opcode.insert(breakpoint.address);
 			break;
 		}	
-	}
-
-	void CPU::setCallbackBreakpoint(CallbackBreakpoint callback) {
-		callbackBreakpoint = callback;
-	}
-
+	}	
 }

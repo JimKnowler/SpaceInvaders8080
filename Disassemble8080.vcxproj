@@ -26,6 +26,8 @@
     <ClInclude Include="src\cpu\Register16.h" />
     <ClInclude Include="src\cpu\State.h" />
     <ClInclude Include="src\Disassemble8080.h" />
+    <ClInclude Include="src\memory\IMemory.h" />
+    <ClInclude Include="src\memory\Memory.h" />
     <ClInclude Include="src\olcPGEX_Gamepad.h" />
     <ClInclude Include="src\olcPixelGameEngine.h" />
     <ClInclude Include="src\util\Utils.h" />
@@ -38,6 +40,7 @@
     <ClCompile Include="src\cpu\State.cpp" />
     <ClCompile Include="src\Disassemble8080.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\memory\Memory.cpp" />
     <ClCompile Include="src\util\Utils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

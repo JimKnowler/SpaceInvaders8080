@@ -49,15 +49,17 @@ namespace {
 
 namespace Disassemble8080 {
 
-    uint16_t dissassembleOpcode(uint8_t* code, std::string& outOpcode) {
+    uint16_t dissassembleOpcode(memory::IMemory* memory, uint16_t pc, std::string& outOpcode) {
         uint16_t numBytes = 1;
 
-        switch (*code) {
+        uint8_t opcode = memory->read(pc);
+
+        switch (opcode) {
         case 0x00:
             outOpcode = "NOP";
             break;
         case 0x01:
-            outOpcode = makeOpcodeD16("LXI", "B, #", code[2], code[1]);
+            outOpcode = makeOpcodeD16("LXI", "B, #", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0x02:
@@ -73,7 +75,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("DCR", "B");
             break;
         case 0x06:
-            outOpcode = makeOpcodeD8("MVI", "B, #", code[1]);
+            outOpcode = makeOpcodeD8("MVI", "B, #", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0x07:
@@ -98,7 +100,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("DCR", "C");
             break;
         case 0x0e:
-            outOpcode = makeOpcodeD8("MVI", "C, #", code[1]);
+            outOpcode = makeOpcodeD8("MVI", "C, #", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0x0f:
@@ -108,7 +110,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcodeNotSupported();
             break;
         case 0x11:
-            outOpcode = makeOpcodeD16("LXI", "D, #", code[2], code[1]);
+            outOpcode = makeOpcodeD16("LXI", "D, #", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0x12:
@@ -124,7 +126,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("DCR", "D");
             break;
         case 0x16:
-            outOpcode = makeOpcodeD8("MVI", "D, #", code[1]);
+            outOpcode = makeOpcodeD8("MVI", "D, #", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0x17:
@@ -149,7 +151,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("DCR", "E");
             break;
         case 0x1e:
-            outOpcode = makeOpcodeD8("MVI", "E, #", code[1]);
+            outOpcode = makeOpcodeD8("MVI", "E, #", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0x1f:
@@ -159,11 +161,11 @@ namespace Disassemble8080 {
             outOpcode = "RIM";
             break;
         case 0x21:
-            outOpcode = makeOpcodeD16("LXI", "H, #", code[2], code[1]);
+            outOpcode = makeOpcodeD16("LXI", "H, #", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0x22:
-            outOpcode = makeOpcodeD16("SHLD", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("SHLD", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0x23:
@@ -176,7 +178,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("DCR", "H");
             break;
         case 0x26:
-            outOpcode = makeOpcodeD8("MVI", "H, #", code[1]);
+            outOpcode = makeOpcodeD8("MVI", "H, #", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0x27:
@@ -189,7 +191,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("DAD", "H");
             break;
         case 0x2a:
-            outOpcode = makeOpcodeD16("LHLD", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("LHLD", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0x2b:
@@ -202,7 +204,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("DCR", "L");
             break;
         case 0x2e:
-            outOpcode = makeOpcodeD8("MVI", "L, #", code[1]);
+            outOpcode = makeOpcodeD8("MVI", "L, #", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0x2f:
@@ -212,11 +214,11 @@ namespace Disassemble8080 {
             outOpcode = "SIM";
             break;
         case 0x31:
-            outOpcode = makeOpcodeD16("LXI", "SP, #", code[2], code[1]);
+            outOpcode = makeOpcodeD16("LXI", "SP, #", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0x32:
-            outOpcode = makeOpcodeD16("STA", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("STA", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0x33:
@@ -229,7 +231,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("DCR", "M");
             break;
         case 0x36:
-            outOpcode = makeOpcodeD8("MVI", "M, #", code[1]);
+            outOpcode = makeOpcodeD8("MVI", "M, #", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0x37:
@@ -242,7 +244,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("DAD", "SP");
             break;
         case 0x3a:
-            outOpcode = makeOpcodeD16("LDA", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("LDA", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0x3b:
@@ -255,7 +257,7 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("DCR", "A");
             break;
         case 0x3e:
-            outOpcode = makeOpcodeD8("MVI", "A,", code[1]);
+            outOpcode = makeOpcodeD8("MVI", "A,", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0x3f:
@@ -652,22 +654,22 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("POP", "B");
             break;
         case 0xc2:
-            outOpcode = makeOpcodeD16("JNZ", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("JNZ", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xc3:
-            outOpcode = makeOpcodeD16("JMP", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("JMP", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xc4:
-            outOpcode = makeOpcodeD16("CNZ", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("CNZ", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xc5:
             outOpcode = makeOpcode("PUSH", "B");
             break;
         case 0xc6:
-            outOpcode = makeOpcodeD8("ADI", "#", code[1]);
+            outOpcode = makeOpcodeD8("ADI", "#", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0xc7:
@@ -680,22 +682,22 @@ namespace Disassemble8080 {
             outOpcode = "RET";
             break;
         case 0xca:
-            outOpcode = makeOpcodeD16("JZ", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("JZ", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xcb:
             outOpcode = makeOpcodeNotSupported();
             break;
         case 0xcc:
-            outOpcode = makeOpcodeD16("CZ", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("CZ", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xcd:
-            outOpcode = makeOpcodeD16("CALL", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("CALL", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xce:
-            outOpcode = makeOpcodeD8("ACI", "#", code[1]);
+            outOpcode = makeOpcodeD8("ACI", "#", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0xcf:
@@ -708,22 +710,22 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("POP", "D");
             break;
         case 0xd2:
-            outOpcode = makeOpcodeD16("JNC", "", code[1], code[1]);
+            outOpcode = makeOpcodeD16("JNC", "", memory->read(pc + 1), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xd3:
-            outOpcode = makeOpcodeD8("OUT", "", code[1]);
+            outOpcode = makeOpcodeD8("OUT", "", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0xd4:
-            outOpcode = makeOpcodeD16("CNC", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("CNC", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xd5:
             outOpcode = makeOpcode("PUSH", "D");
             break;
         case 0xd6:
-            outOpcode = makeOpcodeD8("SUI", "#", code[1]);
+            outOpcode = makeOpcodeD8("SUI", "#", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0xd7:
@@ -736,22 +738,22 @@ namespace Disassemble8080 {
             outOpcode = makeOpcodeNotSupported();
             break;
         case 0xda:
-            outOpcode = makeOpcodeD16("JC", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("JC", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xdb:
-            outOpcode = makeOpcodeD8("IN", "#", code[1]);
+            outOpcode = makeOpcodeD8("IN", "#", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0xdc:
-            outOpcode = makeOpcodeD16("CC", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("CC", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xdd:
             outOpcode = makeOpcodeNotSupported();
             break;
         case 0xde:
-            outOpcode = makeOpcodeD8("SBI", "#", code[1]);
+            outOpcode = makeOpcodeD8("SBI", "#", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0xdf:
@@ -764,21 +766,21 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("POP", "H");
             break;
         case 0xe2:
-            outOpcode = makeOpcodeD16("JPO", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("JPO", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xe3:
             outOpcode = "XTHL";
             break;
         case 0xe4:
-            outOpcode = makeOpcodeD16("CPO", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("CPO", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xe5:
             outOpcode = makeOpcode("PUSH", "H");
             break;
         case 0xe6:
-            outOpcode = makeOpcodeD8("ANI", "#", code[1]);
+            outOpcode = makeOpcodeD8("ANI", "#", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0xe7:
@@ -791,21 +793,21 @@ namespace Disassemble8080 {
             outOpcode = "PCHL";
             break;
         case 0xea:
-            outOpcode = makeOpcodeD16("JPE", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("JPE", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xeb:
             outOpcode = "XCHG";
             break;
         case 0xec:
-            outOpcode = makeOpcodeD16("CPE", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("CPE", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xed:
             outOpcode = makeOpcodeNotSupported();
             break;
         case 0xee:
-            outOpcode = makeOpcodeD8("XRI", "#", code[1]);
+            outOpcode = makeOpcodeD8("XRI", "#", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0xef:
@@ -818,21 +820,21 @@ namespace Disassemble8080 {
             outOpcode = makeOpcode("POP", "PSW");
             break;
         case 0xf2:
-            outOpcode = makeOpcodeD16("JP", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("JP", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xf3:
             outOpcode = "DI";
             break;
         case 0xf4:
-            outOpcode = makeOpcodeD16("CP", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("CP", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xf5:
             outOpcode = makeOpcode("PUSH", "PSW");
             break;
         case 0xf6:
-            outOpcode = makeOpcodeD8("ORI", "#", code[1]);
+            outOpcode = makeOpcodeD8("ORI", "#", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0xf7:
@@ -845,21 +847,21 @@ namespace Disassemble8080 {
             outOpcode = "SPHL";
             break;
         case 0xfa:
-            outOpcode = makeOpcodeD16("JM", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("JM", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xfb:
             outOpcode = "EI";
             break;
         case 0xfc:
-            outOpcode = makeOpcodeD16("CM", "", code[2], code[1]);
+            outOpcode = makeOpcodeD16("CM", "", memory->read(pc + 2), memory->read(pc + 1));
             numBytes = 3;
             break;
         case 0xfd:
             outOpcode = makeOpcodeNotSupported();
             break;
         case 0xfe:
-            outOpcode = makeOpcodeD8("CPI", "#", code[1]);
+            outOpcode = makeOpcodeD8("CPI", "#", memory->read(pc + 1));
             numBytes = 2;
             break;
         case 0xff:

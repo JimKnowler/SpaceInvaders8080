@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "memory/IMemory.h"
+
 namespace Disassemble8080 {
-	uint16_t dissassembleOpcode(uint8_t* code, std::string& outOpcode);
+	uint16_t dissassembleOpcode(memory::IMemory* memory, uint16_t pc, std::string& outOpcode);
 }

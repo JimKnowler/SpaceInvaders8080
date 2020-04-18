@@ -1,5 +1,9 @@
 #include "util/Utils.h"
 
+#include <cassert>
+#include <iostream>
+#include <fstream>
+
 namespace util {
 	uint16_t makeWord(uint8_t hi, uint8_t lo) {
 		return (uint16_t(hi) << 8) | uint16_t(lo);
@@ -24,5 +28,17 @@ namespace util {
 		}
 
 		return (0 == (count & 0x1));
+	}
+
+	size_t getFileSize(const char* filename) {
+		std::ifstream file;
+		file.open(filename, std::ios::in | std::ios::binary | std::ios::ate);
+		assert(file.is_open());
+
+		size_t size = static_cast<size_t>(file.tellg());
+
+		file.close();
+
+		return size;
 	}
 }

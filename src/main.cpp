@@ -6,13 +6,14 @@
 //#define OLC_PGE_GAMEPAD
 //#include "olcPGEX_Gamepad.h"
 
-#include <iostream>
-#include <fstream>
+
 #include <vector>
 #include <cassert>
 #include <chrono>
 
 #include "cpu/CPU.h"
+#include "memory/Memory.h"
+#include "util/Utils.h"
 
 #include "Disassemble8080.h"
 #include "BuildOptions.h"
@@ -20,14 +21,6 @@
 namespace {
     const uint32_t kScreenWidth = 1000;
     const uint32_t kScreenHeight = 600;
-
-#ifdef CPUDIAG
-	const char* kRomFilename = "./roms/cpudiag.bin";
-	const uint16_t kRomLoadAddress = 0x100;
-#else
-    const char* kRomFilename = "./roms/spaceinvaders/invaders.concatenated";
-    const uint16_t kRomLoadAddress = 0;
-#endif
 }
 
 class SpaceInvaders : public olc::PixelGameEngine
@@ -38,51 +31,20 @@ public:
     }
 
     bool OnUserCreate() override {
-        // called once at start
-
-        loadBinaryFile(kRomFilename, kRomLoadAddress, rom);
-        uint16_t pc = kRomLoadAddress;
-		
+        // called once at start		
 		mode = Mode::Debugger;
 
 #ifdef CPUDIAG
-        // CPU Test
-        
-        // fix stack pointer 
-        rom[368] = 0x7;
-
-		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 2000, 0, false, true);
-
-		// run enough steps to complete test
-		// expect to see "CPU IS OPERATIONAL" in console TTY
-		step(650);
-
+		initCpuDiag();
 #else
-		// space invaders
-        initIO();
-
-		emulator.init(&(rom.front()), uint16_t(rom.size()), pc, 0x2400-0x2000, 0x4000-0x2400, true, true);
-
-
-# if 0
-		// debugging 'credits' 
-
-		// address of 'credits' in memory discovered by using old school 'Game Genie' method of looking for byte that 
-		//   changed when number of credits was incremented / decremented
-		emulator.addBreakpoint(Breakpoint(Breakpoint::Type::MemoryWrite, 8192 + 235));
-
-		// PC where credits is incremented
-		emulator.addBreakpoint(Breakpoint(Breakpoint::Type::Opcode, 0x0038));
-
-		// PC where credits is decremented
-		emulator.addBreakpoint(Breakpoint(Breakpoint::Type::Opcode, 0x079b));
-# endif
+		initSpaceInvaders();
+#endif
 
 		// callback invoked when a breakpoint is reached
 		emulator.setCallbackBreakpoint([&](const cpu::Breakpoint& breakpoint, uint16_t value) {
 			switch (breakpoint.type) {
 			case cpu::Breakpoint::Type::MemoryWrite:
-				printf("PC [0x%04x] Memory Write - address [0x%04x] - changing value from [%u] to [%u]\n", emulator.getState().pc, breakpoint.address, emulator.readMemory(breakpoint.address), value);
+				printf("PC [0x%04x] Memory Write - address [0x%04x] - changing value from [%u] to [%u]\n", emulator.getState().pc, breakpoint.address, memory.read(breakpoint.address), value);
 				break;
 			case cpu::Breakpoint::Type::Opcode:
 				printf("PC [0x%04x] Opcode\n", breakpoint.address);
@@ -93,8 +55,8 @@ public:
 
 			mode = Mode::Debugger;
 		});
-#endif
-                
+      		
+		
 		timeLastInterrupt = getCurrentTime();
 		interruptNum = 1;
 
@@ -193,6 +155,69 @@ public:
 	}
 
 private:
+	void initCpuDiag() {
+		const char* kRomFilename = "./roms/cpudiag.bin";
+		const uint16_t kRomLoadAddress = 0x100;
+		
+		memory::Memory::Config config;
+		config.isRomWriteable = true;
+		config.sizeRam = 4 * 1024;
+		config.sizeRom = kRomLoadAddress + uint16_t(util::getFileSize(kRomFilename));
+		memory.configure(config);
+		
+		memory.load(kRomFilename, kRomLoadAddress);
+
+		uint16_t pcStart = kRomLoadAddress;
+
+		// fix stack pointer in ROM
+		memory.write(368, 0x7);
+
+		// disable writing to ROM
+		config.isRomWriteable = false;
+		memory.configure(config);
+
+		emulator.init(&memory, kRomLoadAddress);
+
+		// run enough steps to complete test
+		// expect to see "CPU IS OPERATIONAL" in console TTY
+		step(650);
+	}
+
+	void initSpaceInvaders() {
+		// space invaders
+		initIO();
+
+		const char* kRomFilename = "./roms/spaceinvaders/invaders.concatenated";
+
+		memory::Memory::Config config;
+		config.sizeRam = 0x2000;
+		config.sizeRom = uint16_t(util::getFileSize(kRomFilename));
+		config.isRomWriteable = false;
+		config.isRamMirrored = true;
+
+		memory.configure(config);
+		memory.load(kRomFilename);
+
+		uint16_t pcStart = 0;
+		emulator.init(&memory, pcStart);
+
+# if 0		
+		// debugging 'credits' 
+
+		// address of 'credits' in memory discovered by using old school 'Game Genie' method of looking for byte that 
+		//   changed when number of credits was incremented / decremented
+		emulator.addBreakpoint(Breakpoint(Breakpoint::Type::MemoryWrite, 8192 + 235));
+
+		// PC where credits is incremented
+		emulator.addBreakpoint(Breakpoint(Breakpoint::Type::Opcode, 0x0038));
+
+		// PC where credits is decremented
+		emulator.addBreakpoint(Breakpoint(Breakpoint::Type::Opcode, 0x079b));
+# endif	
+
+		emulator.init(&memory, 0);
+	}
+
     void initIO() {
 		// space invaders 
 		emulator.setCallbackIn([this](uint8_t port) -> uint8_t {
@@ -263,35 +288,7 @@ private:
             emulator.step();
         }
     }
-
-    bool loadBinaryFile(const char* filename, uint16_t offset, std::vector<uint8_t>& outData) {
-        std::cout << "Loading " << filename << "\n";
-
-        std::ifstream file;
-        file.open(filename, std::ios::in | std::ios::binary | std::ios::ate);
-        assert(file.is_open());
-
-        size_t size = static_cast<size_t>(file.tellg());
-        file.seekg(0, std::ios::beg);
-
-        outData.resize(size);
-
-        file.read(reinterpret_cast<char*>(&(outData.front())), size);
-
-        std::cout << "Loaded " << filename << " with " << size << " bytes\n";
-
-        if (offset > 0) {
-            // prepend buffer
-            std::vector<uint8_t> prepend;
-            prepend.resize(offset, 0xfa);
-            rom.insert(outData.begin(), prepend.begin(), prepend.end());
-
-            std::cout << "Prepended " << filename << " with " << offset << " bytes\n";
-        }
-
-        return true;
-    }
-
+    
     void DrawCPU(int x, int y) {
 
         DrawString({ x, y }, "CPU State");
@@ -331,7 +328,7 @@ private:
         y += 10;
         for (int i = 0; i < 10; i++) {
             std::string instruction;
-            uint16_t opcodeSize = Disassemble8080::dissassembleOpcode(&(rom.front()) + pc, instruction);
+            uint16_t opcodeSize = Disassemble8080::dissassembleOpcode(&memory, pc, instruction);
             
             DrawString({ x + 10, y }, FormatBuffer("0x%04x %s", pc, instruction.c_str()));
             y += 10;
@@ -346,10 +343,10 @@ private:
         // 4 byte alignment
         address &= ~3;
 
-        if (address < emulator.getRamTop()) {
+        if (address < memory.size()) {
             y += 10;
             for (int i = 0; i < 8; i++) {
-                DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address + 1), emulator.readMemory(address + 2), emulator.readMemory(address + 3)));
+                DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, memory.read(address), memory.read(address + 1), memory.read(address + 2), memory.read(address + 3)));
 
                 y += 10;
                 address += 4;
@@ -366,10 +363,10 @@ private:
 
         y += 10;
         for (int i = 0; i < 10; i++) {
-			if (address >= emulator.getRamTop()) {
+			if (address >= memory.size()) {
 				break;
 			}
-            DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, emulator.readMemory(address), emulator.readMemory(address + 1), emulator.readMemory(address + 2), emulator.readMemory(address + 3)));
+            DrawString({ x + 10, y }, FormatBuffer("0x%04x %02x %02x %02x %02x", address, memory.read(address), memory.read(address + 1), memory.read(address + 2), memory.read(address + 3)));
 
             y += 10;
             address += 4;
@@ -377,7 +374,7 @@ private:
     }
 
 	void DrawVideoRam(int x, int y) {
-		const std::vector<uint8_t> videoRam = emulator.getVideoRam();
+		const uint16_t kVideoRamStart = 0x2400;
 
 		int i = 0;
 		const int kVideoRamWidth = 224;
@@ -385,7 +382,7 @@ private:
 
 		for (int ix = 0; ix < kVideoRamWidth; ix++) {
 			for (int iy = 0; iy < kVideoRamHeight; iy +=8) {
-				uint8_t byte = videoRam[i++];
+				uint8_t byte = memory.read(kVideoRamStart + i++);
 
 				for (int b = 0; b < 8; b++) {
 					FillRect({ x + ( ix << 1), y + ((kVideoRamHeight - (iy + b)) << 1) }, { 2,2 }, ((byte & 0x1) == 0x1) ? olc::WHITE : olc::BLACK);
@@ -420,6 +417,7 @@ private:
     
     std::vector<uint8_t> rom;
 	cpu::CPU emulator;
+	memory::Memory memory;
 
 	uint8_t shiftRegisterResultOffset;
 	uint16_t shiftRegister;
