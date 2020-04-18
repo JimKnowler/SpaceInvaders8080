@@ -2,7 +2,11 @@
 
 #include <cstdint>
 
+#include "Register16.h"
+
 struct State {
+    State();
+
     struct ConditionCodes {
         uint8_t    z : 1;
         uint8_t    s : 1;
@@ -11,14 +15,10 @@ struct State {
         uint8_t    ac : 1;
         uint8_t    pad : 3;
     };
-
-    uint16_t getHL() const;
-    uint16_t getDE() const;
-    uint16_t getBC() const;
-
-    void setDE(uint16_t value);
-    void setHL(uint16_t value);
-    void setBC(uint16_t value);
+    
+    Register16 hl;
+    Register16 de;
+    Register16 bc;
 
     uint8_t     a;
     uint8_t     b;

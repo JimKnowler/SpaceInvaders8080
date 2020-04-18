@@ -156,6 +156,7 @@
     <ClCompile Include="Disassemble8080.cpp" />
     <ClCompile Include="Emulator8080.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Register16.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
@@ -165,6 +166,7 @@
     <ClInclude Include="Emulator8080.h" />
     <ClInclude Include="olcPGEX_Gamepad.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
+    <ClInclude Include="Register16.h" />
     <ClInclude Include="State.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>

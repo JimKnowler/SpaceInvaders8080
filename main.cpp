@@ -139,8 +139,8 @@ public:
 		DrawString({ 10,10 }, FormatBuffer("Mode [%s]", (mode == Mode::Debugger) ? "DEBUGGER" : "RUN"));
         DrawCPU(10,40);
         DrawOpcodes(200,40);
-        DrawMemory("HL", emulator.getState().getHL(), 10, 200);
-        DrawMemory("DE", emulator.getState().getDE(), 10, 300);
+        DrawMemory("HL", emulator.getState().hl, 10, 200);
+        DrawMemory("DE", emulator.getState().de, 10, 300);
         DrawStack(200, 200);
 		
 #ifndef CPUDIAG
