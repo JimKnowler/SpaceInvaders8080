@@ -79,12 +79,12 @@ public:
 # endif
 
 		// callback invoked when a breakpoint is reached
-		emulator.setCallbackBreakpoint([&](const Breakpoint& breakpoint, uint16_t value) {
+		emulator.setCallbackBreakpoint([&](const cpu::Breakpoint& breakpoint, uint16_t value) {
 			switch (breakpoint.type) {
-			case Breakpoint::Type::MemoryWrite:
+			case cpu::Breakpoint::Type::MemoryWrite:
 				printf("PC [0x%04x] Memory Write - address [0x%04x] - changing value from [%u] to [%u]\n", emulator.getState().pc, breakpoint.address, emulator.readMemory(breakpoint.address), value);
 				break;
-			case Breakpoint::Type::Opcode:
+			case cpu::Breakpoint::Type::Opcode:
 				printf("PC [0x%04x] Opcode\n", breakpoint.address);
 				break;
 			default:
@@ -296,7 +296,7 @@ private:
 
         DrawString({ x, y }, "CPU State");
 
-        const State& state = emulator.getState();
+        const cpu::State& state = emulator.getState();
         uint64_t numSteps = emulator.getNumSteps();
 
         std::vector<std::string> reports = {
@@ -325,7 +325,7 @@ private:
     void DrawOpcodes(int x, int y) {
         DrawString({ x, y }, "Opcodes");
         
-        const State& state = emulator.getState();        
+        const cpu::State& state = emulator.getState();
         uint16_t pc = state.pc;
 
         y += 10;
@@ -360,7 +360,7 @@ private:
     void DrawStack(int x, int y) {
         DrawString({ x, y }, "Stack");
 
-        const State& state = emulator.getState();
+        const cpu::State& state = emulator.getState();
         uint16_t sp = state.sp;
         uint16_t address = sp & ~3;
 
@@ -419,7 +419,7 @@ private:
 	}
     
     std::vector<uint8_t> rom;
-    CPU emulator;
+	cpu::CPU emulator;
 
 	uint8_t shiftRegisterResultOffset;
 	uint16_t shiftRegister;

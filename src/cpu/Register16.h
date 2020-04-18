@@ -2,15 +2,17 @@
 
 #include <cstdint>
 
-struct Register16 {
-    Register16(uint8_t& hi, uint8_t& lo);
+namespace cpu {
+    struct Register16 {
+        Register16(uint8_t& hi, uint8_t& lo);
 
-    // assignment
-    Register16& operator=(uint16_t value);
-    
-    // retrieval
-    operator uint16_t() const;
+        // assignment
+        Register16& operator=(uint16_t value);
 
-    uint8_t& hi;
-    uint8_t& lo;
-};
+        // retrieval
+        operator uint16_t() const;
+
+        uint8_t& hi;
+        uint8_t& lo;
+    };
+}

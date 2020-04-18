@@ -1,43 +1,30 @@
 #include "cpu/ConditionCodes.h"
+#include "util/Utils.h"
 
-namespace {
-	bool parity(uint16_t value) {
+namespace cpu {
 
-		int size = 16;
-		int count = 0;
+	ConditionCodes::ConditionCodes() : all(0) {
 
-		for (int i = 0; i < size; i++) {
-			if (value & 0x01) {
-				count += 1;
-			}
-
-			value >>= 1;
-		}
-
-		return (0 == (count & 0x1));
 	}
-}
 
-ConditionCodes::ConditionCodes() : all(0) {
+	void ConditionCodes::reset() {
+		all = 0;
+	}
 
-}
+	void ConditionCodes::updateByteZSP(uint16_t value) {
+		z = ((value & 0xff) == 0);
+		s = ((value & 0x80) == 0x80);
+		p = util::parity(value & 0xff);
 
-void ConditionCodes::reset() {
-	all = 0;
-}
+		// ac (auxilliary carry) not implemented - not required for space invaders
+	}
 
-void ConditionCodes::updateByteZSP(uint16_t value) {
-	z = ((value & 0xff) == 0);
-	s = ((value & 0x80) == 0x80);
-	p = parity(value & 0xff);
+	void ConditionCodes::updateByteCY(uint16_t value) {
+		cy = (value > 0xff);
+	}
 
-	// ac (auxilliary carry) not implemented - not required for space invaders
-}
+	void ConditionCodes::updateWordCY(uint32_t value) {
+		cy = (value > 0xffff);
+	}
 
-void ConditionCodes::updateByteCY(uint16_t value) {
-	cy = (value > 0xff);
-}
-
-void ConditionCodes::updateWordCY(uint32_t value) {
-	cy = (value > 0xffff);
 }
