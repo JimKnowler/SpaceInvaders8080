@@ -68,33 +68,13 @@ public:
 
 		// address of 'credits' in memory discovered by using old school 'Game Genie' method of looking for byte that 
 		//   changed when number of credits was incremented / decremented
-		emulator.addBreakpoint(Emulator8080::BreakPoint::MemoryWrite, 8192 + 235);
+		emulator.addBreakpoint(Breakpoint(Breakpoint::Type::MemoryWrite, 8192 + 235));
 
 		// PC where credits is incremented
-		emulator.addBreakpoint(Emulator8080::BreakPoint::Opcode, 0x0038);
+		emulator.addBreakpoint(Breakpoint(Breakpoint::Type::Opcode, 0x0038));
 
 		// PC where credits is decremented
-		emulator.addBreakpoint(Emulator8080::BreakPoint::Opcode, 0x079b);
-# endif
-
-
-# if 1
-		// debugging player scrolling left/right
-
-		// RunGameObjs
-		//emulator.addBreakpoint(Emulator8080::Breakpoint::Opcode, 0x0248);
-
-		// DrawShiftedSprited
-		//emulator.addBreakpoint(Emulator8080::Breakpoint::Opcode, 0x1400);
-
-		// MovePlayerRight
-		//emulator.addBreakpoint(Emulator8080::Breakpoint::Opcode, 0x0381);
-		
-		// PC where shift register is output
-		//emulator.addBreakpoint(Emulator8080::Breakpoint::Opcode, 0x1474);
-
-		// PC where Aliens are Counted
-		//emulator.addBreakpoint(Emulator8080::Breakpoint::Opcode, 0x1605);
+		emulator.addBreakpoint(Breakpoint(Breakpoint::Type::Opcode, 0x079b));
 # endif
 
 		// callback invoked when a breakpoint is reached
