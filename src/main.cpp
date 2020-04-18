@@ -15,7 +15,7 @@
 #include "memory/Memory.h"
 #include "util/Utils.h"
 
-#include "Disassemble8080.h"
+#include "Disassemble.h"
 #include "BuildOptions.h"
 
 namespace {
@@ -27,7 +27,7 @@ class SpaceInvaders : public olc::PixelGameEngine
 {
 public:
     SpaceInvaders() {
-        sAppName = "Emulator 8080 - SpaceInvaders";
+        sAppName = "SpaceInvaders8080";
     }
 
 	/// @brief called once at start		
@@ -326,10 +326,10 @@ private:
 
         y += 10;
         for (int i = 0; i < 10; i++) {
-            std::string instruction;
-            uint16_t opcodeSize = Disassemble8080::dissassembleOpcode(&memory, pc, instruction);
+			uint16_t opcodeSize;			
+			std::string strOpcode = Disassemble::stringFromOpcode(&memory, pc, opcodeSize);
             
-            DrawString({ x + 10, y }, PrepareString("0x%04x %s", pc, instruction.c_str()));
+            DrawString({ x + 10, y }, PrepareString("0x%04x %s", pc, strOpcode.c_str()));
             y += 10;
 
             pc += opcodeSize;

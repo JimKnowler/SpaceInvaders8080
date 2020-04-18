@@ -1,7 +1,7 @@
 #include "cpu/CPU.h"
 #include "util/Utils.h"
 
-#include "Disassemble8080.h"
+#include "Disassemble.h"
 #include "BuildOptions.h"
 
 #include <cstring>
@@ -44,13 +44,7 @@ namespace cpu {
 
 		uint8_t opcode = readMemory(state.pc);
 	
-		size_t opcodeSize = 1;
-
-	#if 0
-		std::string strOpcode;
-		size_t numBytes = Disassemble8080::dissassembleOpcode(opcode, strOpcode);
-		printf("pc[0x%04x] opcode[0x%02x] %s\n", state.pc, *opcode, strOpcode.c_str());
-	#endif
+		uint16_t opcodeSize = 1;
 
 		switch (opcode) {
 			case 0x00:						// NOP 
@@ -1777,7 +1771,7 @@ namespace cpu {
 				break;
 		}
 
-		state.pc += uint16_t(opcodeSize);
+		state.pc += opcodeSize;
 
 		if (!breakpoints.opcode.empty() && (breakpoints.opcode.find(state.pc) != breakpoints.opcode.end())) {
 			if (callbacks.breakpoint) {
@@ -1787,9 +1781,9 @@ namespace cpu {
 		}
 	}
 
-	size_t CPU::unimplementedOpcode(uint16_t pc) {
-		std::string strOpcode;
-		size_t numBytes = Disassemble8080::dissassembleOpcode(memory, pc, strOpcode);
+	uint16_t CPU::unimplementedOpcode(uint16_t pc) {
+		uint16_t numBytes;		
+		std::string strOpcode = Disassemble::stringFromOpcode(memory, pc, numBytes);
 
 		printf("unimplemented Instruction: %04x 0x%02x %s\n", pc, memory->read(pc), strOpcode.c_str());
 

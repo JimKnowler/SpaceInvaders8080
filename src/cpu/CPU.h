@@ -44,7 +44,7 @@ namespace cpu {
         void addBreakpoint(const Breakpoint& breakpoint);
 
     private:
-        size_t unimplementedOpcode(uint16_t pc);
+        uint16_t unimplementedOpcode(uint16_t pc);
         uint16_t readOpcodeDataWord() const;
         uint8_t readMemory(uint16_t address) const;
         void writeMemory(uint16_t address, uint8_t value);
