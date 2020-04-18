@@ -1,5 +1,5 @@
-#include "State.h"
-#include "Utils.h"
+#include "cpu/State.h"
+#include "util/Utils.h"
 
 State::State() :
 	hl(h, l), de(d, e), bc(b, c),

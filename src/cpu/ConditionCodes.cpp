@@ -1,4 +1,4 @@
-#include "ConditionCodes.h"
+#include "cpu/ConditionCodes.h"
 
 namespace {
 	bool parity(uint16_t value) {

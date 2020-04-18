@@ -5,12 +5,12 @@
 #include <functional>
 #include <set>
 
-#include "Breakpoint.h"
-#include "State.h"
+#include "cpu/Breakpoint.h"
+#include "cpu/State.h"
 
-class Emulator8080 {
+class CPU {
 public:
-    Emulator8080();
+    CPU();
 
     // initialise the emulator
     /// @todo should just provide memory implementation + pc to start from

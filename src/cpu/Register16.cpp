@@ -1,6 +1,5 @@
-#include "Register16.h"
-
-#include "Utils.h"
+#include "cpu/Register16.h"
+#include "util/Utils.h"
 
 Register16::Register16(uint8_t& _hi, uint8_t& _lo) : hi(_hi), lo(_lo) {
 

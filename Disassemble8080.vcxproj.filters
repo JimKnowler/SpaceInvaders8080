@@ -1,75 +1,80 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src\cpu">
+      <UniqueIdentifier>{525cd661-9bf5-4061-adfd-843bef7ddb9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\memory">
+      <UniqueIdentifier>{91b5995d-8d89-4efa-95c2-056cf3118d92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\util">
+      <UniqueIdentifier>{37cb4e5d-4ba1-429c-882a-69e67352f788}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Disassemble8080.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Emulator8080.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="State.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Register16.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ConditionCodes.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Breakpoint.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClInclude Include="src\Disassemble8080.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\olcPGEX_Gamepad.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\olcPixelGameEngine.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BuildOptions.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu\CPU.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu\Register16.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu\State.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu\Breakpoint.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu\ConditionCodes.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="src\util\Utils.h">
+      <Filter>src\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Disassemble8080.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Emulator8080.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="olcPGEX_Gamepad.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="olcPixelGameEngine.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BuildOptions.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="State.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Register16.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ConditionCodes.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Breakpoint.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
+    <ClCompile Include="src\Disassemble8080.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpu\CPU.cpp">
+      <Filter>src\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpu\Register16.cpp">
+      <Filter>src\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpu\State.cpp">
+      <Filter>src\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpu\Breakpoint.cpp">
+      <Filter>src\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpu\ConditionCodes.cpp">
+      <Filter>src\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="src\util\Utils.cpp">
+      <Filter>src\util</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

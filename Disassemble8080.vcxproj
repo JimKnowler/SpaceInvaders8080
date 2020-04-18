@@ -18,6 +18,28 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\BuildOptions.h" />
+    <ClInclude Include="src\cpu\Breakpoint.h" />
+    <ClInclude Include="src\cpu\ConditionCodes.h" />
+    <ClInclude Include="src\cpu\CPU.h" />
+    <ClInclude Include="src\cpu\Register16.h" />
+    <ClInclude Include="src\cpu\State.h" />
+    <ClInclude Include="src\Disassemble8080.h" />
+    <ClInclude Include="src\olcPGEX_Gamepad.h" />
+    <ClInclude Include="src\olcPixelGameEngine.h" />
+    <ClInclude Include="src\util\Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\cpu\Breakpoint.cpp" />
+    <ClCompile Include="src\cpu\ConditionCodes.cpp" />
+    <ClCompile Include="src\cpu\CPU.cpp" />
+    <ClCompile Include="src\cpu\Register16.cpp" />
+    <ClCompile Include="src\cpu\State.cpp" />
+    <ClCompile Include="src\Disassemble8080.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\util\Utils.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{248BFB40-60ED-41D5-A9AE-8DD6F64630EA}</ProjectGuid>
@@ -152,28 +174,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Breakpoint.cpp" />
-    <ClCompile Include="ConditionCodes.cpp" />
-    <ClCompile Include="Disassemble8080.cpp" />
-    <ClCompile Include="Emulator8080.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Register16.cpp" />
-    <ClCompile Include="State.cpp" />
-    <ClCompile Include="Utils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Breakpoint.h" />
-    <ClInclude Include="BuildOptions.h" />
-    <ClInclude Include="ConditionCodes.h" />
-    <ClInclude Include="Disassemble8080.h" />
-    <ClInclude Include="Emulator8080.h" />
-    <ClInclude Include="olcPGEX_Gamepad.h" />
-    <ClInclude Include="olcPixelGameEngine.h" />
-    <ClInclude Include="Register16.h" />
-    <ClInclude Include="State.h" />
-    <ClInclude Include="Utils.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

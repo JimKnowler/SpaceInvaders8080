@@ -12,8 +12,9 @@
 #include <cassert>
 #include <chrono>
 
+#include "cpu/CPU.h"
+
 #include "Disassemble8080.h"
-#include "Emulator8080.h"
 #include "BuildOptions.h"
 
 namespace {
@@ -418,7 +419,7 @@ private:
 	}
     
     std::vector<uint8_t> rom;
-    Emulator8080 emulator;
+    CPU emulator;
 
 	uint8_t shiftRegisterResultOffset;
 	uint16_t shiftRegister;

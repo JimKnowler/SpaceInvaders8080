@@ -1,12 +1,13 @@
-#include "Emulator8080.h"
+#include "cpu/CPU.h"
+#include "util/Utils.h"
+
 #include "Disassemble8080.h"
 #include "BuildOptions.h"
-#include "Utils.h"
 
 #include <cstring>
 #include <cassert>
 
-Emulator8080::Emulator8080() {	
+CPU::CPU() {	
 	state.reset();
 
 	rom = 0;
@@ -21,7 +22,7 @@ Emulator8080::Emulator8080() {
 	videoTop = 0;
 }
 
-void Emulator8080::init(uint8_t* inRom, uint16_t inRomSize, uint16_t inPc, uint16_t inWorkSize, uint16_t inVideoSize, bool inIsRamMirrorEnabled, bool inIsRomWriteable) {
+void CPU::init(uint8_t* inRom, uint16_t inRomSize, uint16_t inPc, uint16_t inWorkSize, uint16_t inVideoSize, bool inIsRamMirrorEnabled, bool inIsRomWriteable) {
 	rom = inRom;
 	romSize = inRomSize;
 	state.pc = inPc;
@@ -36,23 +37,23 @@ void Emulator8080::init(uint8_t* inRom, uint16_t inRomSize, uint16_t inPc, uint1
 	numSteps = 0;
 }
 
-void Emulator8080::setCallbackIn(CallbackIn callback) {
+void CPU::setCallbackIn(CallbackIn callback) {
 	callbackIn = callback;
 }
 
-void Emulator8080::setCallbackOut(CallbackOut callback) {
+void CPU::setCallbackOut(CallbackOut callback) {
 	callbackOut = callback;
 }
 
-uint64_t Emulator8080::getNumSteps() const {
+uint64_t CPU::getNumSteps() const {
 	return numSteps;
 }
 
-const State& Emulator8080::getState() const {
+const State& CPU::getState() const {
 	return state;
 }
 
-void Emulator8080::step() {
+void CPU::step() {
 	numSteps += 1;
 
 	uint8_t* opcode = rom + state.pc;
@@ -1800,7 +1801,7 @@ void Emulator8080::step() {
 	}
 }
 
-size_t Emulator8080::unimplementedOpcode(uint16_t pc) {
+size_t CPU::unimplementedOpcode(uint16_t pc) {
 	assert(pc < romSize);
 
 	uint8_t* opcode = rom + pc;
@@ -1814,13 +1815,13 @@ size_t Emulator8080::unimplementedOpcode(uint16_t pc) {
 	return numBytes;
 }
 
-uint16_t Emulator8080::readOpcodeD16(uint8_t* opcode) {
+uint16_t CPU::readOpcodeD16(uint8_t* opcode) {
 	uint16_t value = makeWord(opcode[2], opcode[1]);
 
 	return value;
 }
 
-void Emulator8080::writeMemory(uint16_t address, uint8_t value) {
+void CPU::writeMemory(uint16_t address, uint8_t value) {
 	if (isRamMirrorEnabled) {
 		while (address >= videoTop) {
 			// handle mirroring of RAM above end of video ram
@@ -1856,7 +1857,7 @@ void Emulator8080::writeMemory(uint16_t address, uint8_t value) {
 	}
 }
 
-uint8_t Emulator8080::readMemory(uint16_t address) const {
+uint8_t CPU::readMemory(uint16_t address) const {
 	if (isRamMirrorEnabled) {
 		while (address >= videoTop) {
 			// handle mirroring of RAM above video RAM
@@ -1883,7 +1884,7 @@ uint8_t Emulator8080::readMemory(uint16_t address) const {
 	}
 }
 
-void Emulator8080::call(uint16_t address, uint16_t returnAddress) {
+void CPU::call(uint16_t address, uint16_t returnAddress) {
 	uint8_t rethi = uint8_t((returnAddress >> 8) & 0xff);
 	uint8_t retlo = uint8_t(returnAddress & 0xff);
 	writeMemory(state.sp - 1, rethi);
@@ -1892,18 +1893,18 @@ void Emulator8080::call(uint16_t address, uint16_t returnAddress) {
 	state.pc = address;
 }
 
-void Emulator8080::ret() {
+void CPU::ret() {
 	uint8_t pclo = readMemory(state.sp);
 	uint8_t pchi = readMemory(state.sp + 1);
 	state.pc = makeWord(pchi, pclo);
 	state.sp += 2;
 }
 
-uint16_t Emulator8080::getRamTop() const {
+uint16_t CPU::getRamTop() const {
 	return videoTop;
 }
 
-void Emulator8080::interrupt(int interruptNum) {
+void CPU::interrupt(int interruptNum) {
 	if (!state.interruptsEnabled) {
 		return;
 	}
@@ -1918,11 +1919,11 @@ void Emulator8080::interrupt(int interruptNum) {
 	state.pc = 8 * interruptNum;
 }
 
-const std::vector<uint8_t> Emulator8080::getVideoRam() const {
+const std::vector<uint8_t> CPU::getVideoRam() const {
 	return video;
 }
 
-void Emulator8080::addBreakpoint(const Breakpoint& breakpoint) {
+void CPU::addBreakpoint(const Breakpoint& breakpoint) {
 	switch (breakpoint.type) {
 	case Breakpoint::Type::MemoryWrite:
 		breakpoints.memoryWrite.insert(breakpoint.address);
@@ -1933,6 +1934,6 @@ void Emulator8080::addBreakpoint(const Breakpoint& breakpoint) {
 	}	
 }
 
-void Emulator8080::setCallbackBreakpoint(CallbackBreakpoint callback) {
+void CPU::setCallbackBreakpoint(CallbackBreakpoint callback) {
 	callbackBreakpoint = callback;
 }

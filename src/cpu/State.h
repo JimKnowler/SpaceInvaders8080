@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-#include "ConditionCodes.h"
-#include "Register16.h"
+#include "cpu/ConditionCodes.h"
+#include "cpu/Register16.h"
 
 struct State {
     State();
