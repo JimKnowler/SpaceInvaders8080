@@ -1792,9 +1792,10 @@ void Emulator8080::step() {
 
 	state.pc += uint16_t(opcodeSize);
 
-	if (!breakpointsOpcode.empty() && (breakpointsOpcode.find(state.pc) != breakpointsOpcode.end())) {
+	if (!breakpoints.opcode.empty() && (breakpoints.opcode.find(state.pc) != breakpoints.opcode.end())) {
 		if (callbackBreakpoint) {
-			callbackBreakpoint(Breakpoint::Opcode, state.pc, 0);
+			Breakpoint breakpoint(Breakpoint::Type::Opcode, state.pc);
+			callbackBreakpoint(breakpoint, 0);
 		}
 	}
 }
@@ -1829,9 +1830,10 @@ void Emulator8080::writeMemory(uint16_t address, uint8_t value) {
 
 	assert(address <= videoTop);
 	
-	if (!breakpointsMemoryWrite.empty() && (breakpointsMemoryWrite.find(address) != breakpointsMemoryWrite.end())) {
+	if (!breakpoints.memoryWrite.empty() && (breakpoints.memoryWrite.find(address) != breakpoints.memoryWrite.end())) {
 		if (callbackBreakpoint) {
-			callbackBreakpoint(Breakpoint::MemoryWrite, address, value);
+			Breakpoint breakpoint(Breakpoint::Type::MemoryWrite, address);
+			callbackBreakpoint(breakpoint, value);
 		}
 	}
 	
@@ -1881,8 +1883,6 @@ uint8_t Emulator8080::readMemory(uint16_t address) const {
 	}
 }
 
-
-
 void Emulator8080::call(uint16_t address, uint16_t returnAddress) {
 	uint8_t rethi = uint8_t((returnAddress >> 8) & 0xff);
 	uint8_t retlo = uint8_t(returnAddress & 0xff);
@@ -1922,13 +1922,13 @@ const std::vector<uint8_t> Emulator8080::getVideoRam() const {
 	return video;
 }
 
-void Emulator8080::addBreakpoint(Breakpoint type, uint16_t address) {
-	switch (type) {
-	case Breakpoint::MemoryWrite:
-		breakpointsMemoryWrite.insert(address);
+void Emulator8080::addBreakpoint(const Breakpoint& breakpoint) {
+	switch (breakpoint.type) {
+	case Breakpoint::Type::MemoryWrite:
+		breakpoints.memoryWrite.insert(breakpoint.address);
 		break;
-	case Breakpoint::Opcode:
-		breakpointsOpcode.insert(address);
+	case Breakpoint::Type::Opcode:
+		breakpoints.opcode.insert(breakpoint.address);
 		break;
 	}	
 }

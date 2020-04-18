@@ -5,6 +5,7 @@
 #include <functional>
 #include <set>
 
+#include "Breakpoint.h"
 #include "State.h"
 
 class Emulator8080 {
@@ -47,17 +48,12 @@ public:
     /// @todo replace by using readMemory()
 	const std::vector<uint8_t> getVideoRam() const;
     
-    enum class Breakpoint {
-        MemoryWrite,
-        Opcode
-    };
-
     // add a breakpoint that is fired when an address is written to
-    void addBreakpoint(Breakpoint type, uint16_t address);
+    void addBreakpoint(const Breakpoint& breakpoint);
 
     // CallbackBreakpoint - optional callback fired when a breakpoint is reached
     
-    typedef std::function<void(Breakpoint type, uint16_t address, uint16_t value)> CallbackBreakpoint;
+    typedef std::function<void(const Breakpoint& breakpoint, uint16_t value)> CallbackBreakpoint;
     void setCallbackBreakpoint(CallbackBreakpoint callback);
         
 private:
@@ -88,6 +84,8 @@ private:
 	CallbackOut		callbackOut;
     CallbackBreakpoint callbackBreakpoint;
 
-    std::set<uint16_t> breakpointsMemoryWrite;
-    std::set<uint16_t> breakpointsOpcode;
+    struct Breakpoints {
+        std::set<uint16_t> memoryWrite;
+        std::set<uint16_t> opcode;
+    } breakpoints;
 };

@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Breakpoint.cpp" />
     <ClCompile Include="ConditionCodes.cpp" />
     <ClCompile Include="Disassemble8080.cpp" />
     <ClCompile Include="Emulator8080.cpp" />
@@ -162,6 +163,7 @@
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Breakpoint.h" />
     <ClInclude Include="BuildOptions.h" />
     <ClInclude Include="ConditionCodes.h" />
     <ClInclude Include="Disassemble8080.h" />

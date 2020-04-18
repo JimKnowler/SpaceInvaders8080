@@ -98,13 +98,13 @@ public:
 # endif
 
 		// callback invoked when a breakpoint is reached
-		emulator.setCallbackBreakpoint([&](Emulator8080::Breakpoint type, uint16_t address, uint16_t value) {
-			switch (type) {
-			case Emulator8080::Breakpoint::MemoryWrite:
-				printf("PC [0x%04x] Memory Write - address [0x%04x] - changing value from [%u] to [%u]\n", emulator.getState().pc, address, emulator.readMemory(address), value);
+		emulator.setCallbackBreakpoint([&](const Breakpoint& breakpoint, uint16_t value) {
+			switch (breakpoint.type) {
+			case Breakpoint::Type::MemoryWrite:
+				printf("PC [0x%04x] Memory Write - address [0x%04x] - changing value from [%u] to [%u]\n", emulator.getState().pc, breakpoint.address, emulator.readMemory(breakpoint.address), value);
 				break;
-			case Emulator8080::Breakpoint::Opcode:
-				printf("PC [0x%04x] Opcode\n", address);
+			case Breakpoint::Type::Opcode:
+				printf("PC [0x%04x] Opcode\n", breakpoint.address);
 				break;
 			default:
 				printf("unknown breakpoint\n");
