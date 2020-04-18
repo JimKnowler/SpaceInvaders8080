@@ -127,21 +127,23 @@ public:
 	}
 
 	void updateStep() {
+		int numSteps = 0;
+
 		if (GetKey(olc::SPACE).bReleased) {
-			if (GetKey(olc::SHIFT).bHeld) {
-				if (GetKey(olc::CTRL).bHeld) {
-					// CTRL + SHIFT + SPACE
-					step(100);
-				}
-				else {
-					// SHIFT + SPACE
-					step(10);
-				}
+			numSteps = 1;
+		}
+
+		if (GetKey(olc::SHIFT).bHeld) {
+			numSteps *= 10;
+
+			if (GetKey(olc::CTRL).bHeld) {
+				// CTRL + SHIFT + SPACE
+				numSteps *= 100;
 			}
-			else {
-				// SPACE
-				step(1);
-			}
+		}
+		
+		if (numSteps > 0) {
+			step(numSteps);
 		}
 	}
 
