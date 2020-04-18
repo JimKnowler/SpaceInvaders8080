@@ -6,24 +6,6 @@
 #include <cstring>
 #include <cassert>
 
-namespace {
-	bool parity(uint16_t value) {
-
-		int size = 16;
-		int count = 0;
-
-		for (int i = 0; i < size; i++) {
-			if (value & 0x01) {
-				count += 1;
-			}
-			
-			value >>= 1;
-		}
-
-		return (0 == (count & 0x1));
-	}
-}
-
 Emulator8080::Emulator8080() {	
 	state.reset();
 
@@ -109,13 +91,13 @@ void Emulator8080::step() {
 		case 0x04:						// INR B
 		{
 			state.b += 1;
-			updateZSP(state.b);
+			state.cc.updateByteZSP(state.b);
 			break;
 		}
 		case 0x05:						// DCR B
 		{
 			uint8_t value = state.b - 1;
-			updateZSP(value);
+			state.cc.updateByteZSP(value);
 			state.b = value;
 			break;
 		}
@@ -138,7 +120,7 @@ void Emulator8080::step() {
 			uint32_t hl = state.hl;
 			uint32_t bc = state.bc;
 			uint32_t value = hl + bc;
-			updateWordCY(value);
+			state.cc.updateWordCY(value);
 			state.hl = value & 0xffff;
 			break;
 		}
@@ -158,13 +140,13 @@ void Emulator8080::step() {
 		case 0x0C:						// INR C
 		{
 			state.c += 1;
-			updateZSP(state.c);
+			state.cc.updateByteZSP(state.c);
 			break;
 		}
 		case 0x0D:						// DCR C
 		{
 			state.c -= 1;
-			updateZSP(state.c);
+			state.cc.updateByteZSP(state.c);
 			break;
 		}
 		case 0x0E:						// MVI C, D8
@@ -205,13 +187,13 @@ void Emulator8080::step() {
 		case 0x14:						// INR D
 		{
 			state.d += 1;
-			updateZSP(state.d);
+			state.cc.updateByteZSP(state.d);
 			break;
 		}
 		case 0x15:						// DCR D
 		{
 			state.d -= 1;
-			updateZSP(state.d);
+			state.cc.updateByteZSP(state.d);
 			break;
 		}
 		case 0x16:						// MVI D, D8
@@ -234,7 +216,7 @@ void Emulator8080::step() {
 			uint32_t de = state.de;
 			uint32_t hl = state.hl;
 			uint32_t value = hl + de;
-			updateWordCY(value);
+			state.cc.updateWordCY(value);
 			state.hl = value & 0xffff;
 			break;
 		}
@@ -255,13 +237,13 @@ void Emulator8080::step() {
 		case 0x1C:						// INR E
 		{
 			state.e += 1;
-			updateZSP(state.e);
+			state.cc.updateByteZSP(state.e);
 			break;
 		}
 		case 0x1D:						// DCR E
 		{
 			state.e -= 1;
-			updateZSP(state.e);
+			state.cc.updateByteZSP(state.e);
 			break;
 		}
 		case 0x1E:						// MVI E, D8
@@ -303,13 +285,13 @@ void Emulator8080::step() {
 		case 0x24:						// INR H
 		{
 			state.h += 1;
-			updateZSP(state.h);
+			state.cc.updateByteZSP(state.h);
 			break;
 		}
 		case 0x25:						// DCR H
 		{
 			state.h -= 1;
-			updateZSP(state.h);
+			state.cc.updateByteZSP(state.h);
 			break;
 		}
 		case 0x26:						// MVI H, D8
@@ -332,7 +314,7 @@ void Emulator8080::step() {
 			if ((1 == state.cc.cy) || ((state.a & 0xf0) > 0x90)) {
 				state.a += 0x60;
 				state.cc.cy = 1;
-				updateZSP(state.a);
+				state.cc.updateByteZSP(state.a);
 			}
 
 			break;
@@ -342,7 +324,7 @@ void Emulator8080::step() {
 		{
 			uint32_t hl = state.hl;
 			uint32_t value = hl + hl;
-			updateWordCY(value);
+			state.cc.updateWordCY(value);
 			state.hl = value & 0xffff;
 			break;
 		}
@@ -364,13 +346,13 @@ void Emulator8080::step() {
 		case 0x2C:						// INR L
 		{
 			state.l += 1;
-			updateZSP(state.l);
+			state.cc.updateByteZSP(state.l);
 			break;
 		}
 		case 0x2D:						// DCR L
 		{
 			state.l -= 1;
-			updateZSP(state.l);
+			state.cc.updateByteZSP(state.l);
 			break;
 		}
 		case 0x2E:						// MVI L, D8
@@ -408,7 +390,7 @@ void Emulator8080::step() {
 			uint16_t address = state.hl;
 			uint16_t value = readMemory(address);
 			value += 1;
-			updateZSP(value);
+			state.cc.updateByteZSP(value);
 			writeMemory(address, uint8_t(value & 0xff));
 			break;
 		}
@@ -417,7 +399,7 @@ void Emulator8080::step() {
 			uint16_t address = state.hl;
 			uint16_t value = readMemory(address);
 			value -= 1;
-			updateZSP(value);
+			state.cc.updateByteZSP(value);
 			writeMemory(address, uint8_t(value & 0xff));
 			break;
 		}
@@ -438,7 +420,7 @@ void Emulator8080::step() {
 		case 0x39:						// DAD SP
 		{
 			uint32_t value = uint32_t(state.hl) + uint32_t(state.sp);
-			updateWordCY(value);
+			state.cc.updateWordCY(value);
 			state.hl = uint16_t(value & 0xffff);
 			break;
 		}
@@ -458,13 +440,13 @@ void Emulator8080::step() {
 		case 0x3c:						// INR A
 		{
 			state.a += 1;
-			updateZSP(state.a);
+			state.cc.updateByteZSP(state.a);
 			break;
 		}
 		case 0x3d:						// DCR A
 		{
 			state.a -= 1;
-			updateZSP(state.a);
+			state.cc.updateByteZSP(state.a);
 			break;
 		}
 		
@@ -774,48 +756,48 @@ void Emulator8080::step() {
 		case 0x80:						// ADD B
 		{
 			uint16_t answer = uint16_t(state.a) + uint16_t(state.b);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x81:						// ADD C
 		{
 			uint16_t answer = uint16_t(state.a) + uint16_t(state.c);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x82:						// ADD D
 		{
 			uint16_t answer = uint16_t(state.a) + uint16_t(state.d);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x83:						// ADD E
 		{
 			uint16_t answer = uint16_t(state.a) + uint16_t(state.e);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x84:						// ADD H
 		{
 			uint16_t answer = uint16_t(state.a) + uint16_t(state.h);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x85:						// ADD L
 		{
 			uint16_t answer = uint16_t(state.a) + uint16_t(state.l);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
@@ -823,64 +805,64 @@ void Emulator8080::step() {
 		{
 			uint16_t address = state.hl;
 			uint16_t answer = uint16_t(state.a) + uint16_t(readMemory(address));
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x87:						// ADD A
 		{
 			uint16_t answer = uint16_t(state.a) + uint16_t(state.a);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x88:						// ADC B
 		{
 			uint16_t value = state.a + uint16_t(state.b) + uint16_t(state.cc.cy);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 			break;
 		}
 		case 0x89:						// ADC C
 		{
 			uint16_t value = state.a + uint16_t(state.c) + uint16_t(state.cc.cy);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 			break;
 		}
 		case 0x8a:						// ADC D
 		{
 			uint16_t value = state.a + uint16_t(state.d) + uint16_t(state.cc.cy);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 			break;
 		}
 		case 0x8b:						// ADC E
 		{
 			uint16_t value = state.a + uint16_t(state.e) + uint16_t(state.cc.cy);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 			break;
 		}
 		case 0x8c:						// ADC H
 		{
 			uint16_t value = state.a + uint16_t(state.h) + uint16_t(state.cc.cy);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 			break;
 		}
 		case 0x8d:						// ADC L
 		{
 			uint16_t value = state.a + uint16_t(state.l) + uint16_t(state.cc.cy);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 			break;
 		}
@@ -888,64 +870,64 @@ void Emulator8080::step() {
 		{								// ADC M
 			uint16_t address = state.hl;
 			uint16_t value = state.a + uint16_t(readMemory(address)) + uint16_t(state.cc.cy);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 			break;
 		}
 		case 0x8f:						// ADC A
 		{
 			uint16_t value = state.a + uint16_t(state.a) + uint16_t(state.cc.cy);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 			break;
 		}
 		case 0x90:						// SUB B
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.b);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x91:						// SUB C
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.c);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x92:						// SUB D
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.d);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x93:						// SUB E
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.e);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x94:						// SUB H
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.h);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x95:						// SUB L
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.l);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
@@ -953,64 +935,64 @@ void Emulator8080::step() {
 		{
 			uint16_t address = state.hl;
 			uint16_t answer = uint16_t(state.a) - uint16_t(readMemory(address));
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x97:						// SUB A
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.a);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x98:						// SBB B
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.b) - uint16_t(state.cc.cy);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x99:						// SBB C
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.c) - uint16_t(state.cc.cy);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x9a:						// SBB D
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.d) - uint16_t(state.cc.cy);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x9b:						// SBB E
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.e) - uint16_t(state.cc.cy);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x9c:						// SBB H
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.h) - uint16_t(state.cc.cy);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x9d:						// SBB L
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.l) - uint16_t(state.cc.cy);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
@@ -1018,245 +1000,245 @@ void Emulator8080::step() {
 		{
 			uint16_t address = state.hl;
 			uint16_t answer = uint16_t(state.a) - uint16_t(readMemory(address)) - uint16_t(state.cc.cy);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0x9f:						// SBB A
 		{
 			uint16_t answer = uint16_t(state.a) - uint16_t(state.a) - uint16_t(state.cc.cy);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = answer & 0xff;
 			break;
 		}
 		case 0xa0:						// ANA B
 		{
 			state.a &= state.b;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xa1:						// ANA C
 		{
 			state.a &= state.c;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xa2:						// ANA D
 		{
 			state.a &= state.d;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xa3:						// ANA E
 		{
 			state.a &= state.e;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xa4:						// ANA H
 		{
 			state.a &= state.h;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xa5:						// ANA L
 		{
 			state.a &= state.l;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xA6:						// ANA M
 		{
 			uint16_t address = state.hl;
 			state.a &= readMemory(address);
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xA7:						// ANA A
 		{
 			state.a &= state.a;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xA8:						// XRA B
 		{
 			state.a = state.a ^ state.b;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xA9:						// XRA C
 		{
 			state.a = state.a ^ state.c;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xAA:						// XRA D
 		{
 			state.a = state.a ^ state.d;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xAB:						// XRA E
 		{
 			state.a = state.a ^ state.e;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xAC:						// XRA H
 		{
 			state.a = state.a ^ state.h;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xAD:						// XRA L
 		{
 			state.a = state.a ^ state.l;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xAE:						// XRA M
 		{
 			uint16_t address = state.hl;
 			state.a = state.a ^ readMemory(address);
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xAf:						// XRA A
 		{
 			state.a = state.a ^ state.a;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xB0:						// ORA B
 		{
 			state.a = state.a | state.b;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xB1:						// ORA C
 		{
 			state.a = state.a | state.c;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xB2:						// ORA D
 		{
 			state.a = state.a | state.d;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xB3:						// ORA E
 		{
 			state.a = state.a | state.e;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xB4:						// ORA H
 		{
 			state.a = state.a | state.h;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xB5:						// ORA L
 		{
 			state.a = state.a | state.l;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xB6:						// ORA M
 		{
 			uint16_t address = state.hl;
 			state.a = state.a | readMemory(address);
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xB7:						// ORA a
 		{
 			state.a = state.a | state.a;
-			updateZSP(state.a);
-			updateCY(state.a);
+			state.cc.updateByteZSP(state.a);
+			state.cc.updateByteCY(state.a);
 			break;
 		}
 		case 0xB8:						// CMP B
 		{
 			uint16_t value = uint16_t(state.a) - uint16_t(state.b);
-			updateZSP(value);
-			updateCY(value);
+			state.cc.updateByteZSP(value);
+			state.cc.updateByteCY(value);
 			break;
 		}
 		case 0xB9:						// CMP C
 		{
 			uint16_t value = uint16_t(state.a) - uint16_t(state.c);
-			updateZSP(value);
-			updateCY(value);
+			state.cc.updateByteZSP(value);
+			state.cc.updateByteCY(value);
 			break;
 		}
 		case 0xBA:						// CMP D
 		{
 			uint16_t value = uint16_t(state.a) - uint16_t(state.d);
-			updateZSP(value);
-			updateCY(value);
+			state.cc.updateByteZSP(value);
+			state.cc.updateByteCY(value);
 			break;
 		}
 		case 0xBB:						// CMP E
 		{
 			uint16_t value = uint16_t(state.a) - uint16_t(state.e);
-			updateZSP(value);
-			updateCY(value);
+			state.cc.updateByteZSP(value);
+			state.cc.updateByteCY(value);
 			break;
 		}
 		case 0xBC:						// CMP H
 		{
 			uint16_t value = uint16_t(state.a) - uint16_t(state.h);
-			updateZSP(value);
-			updateCY(value);
+			state.cc.updateByteZSP(value);
+			state.cc.updateByteCY(value);
 			break;
 		}
 		case 0xBD:						// CMP L
 		{
 			uint16_t value = uint16_t(state.a) - uint16_t(state.l);
-			updateZSP(value);
-			updateCY(value);
+			state.cc.updateByteZSP(value);
+			state.cc.updateByteCY(value);
 			break;
 		}
 		case 0xBE:						// CMP M
 		{
 			uint16_t address = state.hl;
 			uint16_t value = uint16_t(state.a) - uint16_t(readMemory(address));
-			updateZSP(value);
-			updateCY(value);
+			state.cc.updateByteZSP(value);
+			state.cc.updateByteCY(value);
 			break;
 		}
 		case 0xBF:						// CMP A
 		{
 			uint16_t value = uint16_t(state.a) - uint16_t(state.a);
-			updateZSP(value);
-			updateCY(value);
+			state.cc.updateByteZSP(value);
+			state.cc.updateByteCY(value);
 			break;
 		}
 		case 0xC0:						// RNZ
@@ -1318,8 +1300,8 @@ void Emulator8080::step() {
 		case 0xC6:						// ADI byte
 		{
 			uint16_t answer = uint16_t(state.a) + uint16_t(opcode[1]);
-			updateZSP(answer);
-			updateCY(answer);
+			state.cc.updateByteZSP(answer);
+			state.cc.updateByteCY(answer);
 			state.a = uint8_t(answer & 0xff);
 			opcodeSize = 2;
 			break;
@@ -1417,8 +1399,8 @@ void Emulator8080::step() {
 			uint16_t value = state.a;
 			value += uint16_t(opcode[1]);
 			value += uint16_t(state.cc.cy);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 
 			opcodeSize = 2;
@@ -1487,8 +1469,8 @@ void Emulator8080::step() {
 		{
 			uint8_t data = opcode[1];
 			uint16_t value = uint16_t(state.a) - uint16_t(data);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 
 			opcodeSize = 2;
@@ -1545,8 +1527,8 @@ void Emulator8080::step() {
 		{
 			uint8_t data = opcode[1];
 			uint16_t value = uint16_t(state.a) - uint16_t(data) - uint16_t(state.cc.cy);
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = uint8_t(value & 0xff);
 
 			opcodeSize = 2;
@@ -1613,8 +1595,8 @@ void Emulator8080::step() {
 		case 0xE6:						// ANI D8
 		{
 			uint16_t value = uint16_t(state.a) & uint16_t(opcode[1]);
-			updateZSP(value);
-			updateCY(value);
+			state.cc.updateByteZSP(value);
+			state.cc.updateByteCY(value);
 			state.a = uint8_t(value & 0xff);
 			opcodeSize = 2;
 			break;
@@ -1670,8 +1652,8 @@ void Emulator8080::step() {
 		case 0xEE:						// XRI
 		{
 			state.a ^= opcode[1];
-			updateCY(state.a);
-			updateZSP(state.a);
+			state.cc.updateByteCY(state.a);
+			state.cc.updateByteZSP(state.a);
 
 			opcodeSize = 2;
 			break;
@@ -1740,8 +1722,8 @@ void Emulator8080::step() {
 		{
 			uint8_t data = opcode[1];
 			uint8_t value = state.a | data;
-			updateCY(value);
-			updateZSP(value);
+			state.cc.updateByteCY(value);
+			state.cc.updateByteZSP(value);
 			state.a = value;
 			opcodeSize = 2;
 			break;
@@ -1796,8 +1778,8 @@ void Emulator8080::step() {
 		case 0xFE:						// CPI D8
 		{
 			uint16_t value = uint16_t(state.a) - uint16_t(opcode[1]);
-			updateZSP(value);
-			updateCY(value);
+			state.cc.updateByteZSP(value);
+			state.cc.updateByteCY(value);
 
 			opcodeSize = 2;
 			break;
@@ -1815,22 +1797,6 @@ void Emulator8080::step() {
 			callbackBreakpoint(Breakpoint::Opcode, state.pc, 0);
 		}
 	}
-}
-
-void Emulator8080::updateZSP(uint16_t answer) {
-	state.cc.z = ((answer & 0xff) == 0);
-	state.cc.s = ((answer & 0x80) == 0x80);
-	state.cc.p = parity(answer & 0xff);
-
-	// ac (auxilliary carry) not implemented - not required for space invaders
-}
-
-void Emulator8080::updateCY(uint16_t value) {
-	state.cc.cy = (value > 0xff);
-}
-
-void Emulator8080::updateWordCY(uint32_t value) {
-	state.cc.cy = (value > 0xffff);
 }
 
 size_t Emulator8080::unimplementedOpcode(uint16_t pc) {

@@ -7,6 +7,10 @@ struct ConditionCodes {
 
     void reset();
 
+    void updateByteZSP(uint16_t value);
+    void updateByteCY(uint16_t value);
+    void updateWordCY(uint32_t value);
+
     union {
         struct {
             uint8_t    z : 1;
