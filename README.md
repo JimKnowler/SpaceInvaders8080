@@ -1,6 +1,6 @@
-# Space Invaders Emulator
+# Space Invaders Arcade Emulator
 
-Emulate Intel 8080 CPU + Taito Space Invaders machine Hardware.
+Emulate `Intel 8080` CPU + ` Taito Space Invaders` machine Hardware.
 
 ## Requirements
 
