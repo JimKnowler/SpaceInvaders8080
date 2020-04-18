@@ -31,7 +31,7 @@ When the test is successful you should see a message in console TTY saying "`CPU
 
 ## Space Invaders
 
-By default, the emulator will run the Taito Space Invaders ROM
+By default, the emulator will run the original `Taito Space Invaders ROM`.
 
 ## Instructions
 
@@ -66,20 +66,39 @@ The emulator can be switched into Run mode, where it will simulate running a Tai
 | X  | Player 2 - Move Right  |
 | SHIFT  | Player 2 - Fire  |
 
+# Debugging Tools
 
-# TODO
+The CPU emulation supports setting breakpoints for:
 
-Currently working on debugging the 'attract mode'.
+- Executing Opcode at a specified address
+- Writing to memory at a specified address
 
-- The external shift register is only being used with shift offset of 0
-- the COIN input is not incrementing CREDITS
+Multiple breakpoints can be instantiated.
 
-# DEBUGGING IDEAS
+# Status
+## Progress
+
+- Player is able to insert coins + start a game
+- Player is able to move left/right + fire
+- Aliens are able to animate, move left/right + fire
+- Player score is incrementing, hi-scores are recorded
+
+## Issues
+
+- Player + alien horizontal movements appear incorrect
+  - unable to shift left/right by less than a byte?
+  - leaving a trail of corrupted pixels behind after moving
+    - this is affecting collision detection, which appears to be implemented on pixel values
+  - perhaps start by looking at the external shift register for issues
+- CPU emulation does not count cycles
+  - Not currently required for Space Invaders simulation
+
+## More Debugging Ideas
 
 - support time travel debugging - the ability to roll forward/backwards in time through CPU + memory state
-- keep track of opcode history so that we can trace back through recent opcode execution
 - support hardware breakpoints
-  - read/write memory addresses
-  - when executing opcode at specific address
   - when using OUT/IN on specific port, with specific value of A register
 
+## Optimisation Ideas
+
+- convert opcode switch to jump tables for O(1) execution
