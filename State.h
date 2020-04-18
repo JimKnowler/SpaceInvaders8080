@@ -2,20 +2,14 @@
 
 #include <cstdint>
 
+#include "ConditionCodes.h"
 #include "Register16.h"
 
 struct State {
     State();
 
-    struct ConditionCodes {
-        uint8_t    z : 1;
-        uint8_t    s : 1;
-        uint8_t    p : 1;
-        uint8_t    cy : 1;
-        uint8_t    ac : 1;
-        uint8_t    pad : 3;
-    };
-    
+    void reset();
+        
     Register16 hl;
     Register16 de;
     Register16 bc;

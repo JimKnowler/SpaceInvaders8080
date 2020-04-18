@@ -24,13 +24,19 @@ namespace {
 	}
 }
 
-Emulator8080::Emulator8080() {
-	memset(&state, sizeof(State), 0);
+Emulator8080::Emulator8080() {	
+	state.reset();
+
 	rom = 0;
-	romSize = 0;
-	state.interruptsEnabled = false;
-	
+	romSize = 0;		
 	numSteps = 0;
+
+	isRamMirrorEnabled = false;
+	isRomWriteable = false;
+
+	ramSize = 0;
+	workTop = 0;
+	videoTop = 0;
 }
 
 void Emulator8080::init(uint8_t* inRom, uint16_t inRomSize, uint16_t inPc, uint16_t inWorkSize, uint16_t inVideoSize, bool inIsRamMirrorEnabled, bool inIsRomWriteable) {

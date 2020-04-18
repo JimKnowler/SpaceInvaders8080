@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ConditionCodes.cpp" />
     <ClCompile Include="Disassemble8080.cpp" />
     <ClCompile Include="Emulator8080.cpp" />
     <ClCompile Include="main.cpp" />
@@ -162,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BuildOptions.h" />
+    <ClInclude Include="ConditionCodes.h" />
     <ClInclude Include="Disassemble8080.h" />
     <ClInclude Include="Emulator8080.h" />
     <ClInclude Include="olcPGEX_Gamepad.h" />
