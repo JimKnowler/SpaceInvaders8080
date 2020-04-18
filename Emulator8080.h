@@ -12,6 +12,7 @@ public:
     Emulator8080();
 
     // initialise the emulator
+    /// @todo should just provide memory implementation + pc to start from
     void init(uint8_t* rom, uint16_t romSize,  uint16_t pc, uint16_t inWorkSize, uint16_t inVideoSize, bool isRamMirrorEnabled, bool isRomWriteable);
 
 	// CallbackIn - invoked for IN opcode
@@ -46,17 +47,17 @@ public:
     /// @todo replace by using readMemory()
 	const std::vector<uint8_t> getVideoRam() const;
     
-    enum class BreakPoint {
+    enum class Breakpoint {
         MemoryWrite,
         Opcode
     };
 
     // add a breakpoint that is fired when an address is written to
-    void addBreakPoint(BreakPoint type, uint16_t address);
+    void addBreakpoint(Breakpoint type, uint16_t address);
 
     // CallbackBreakpoint - optional callback fired when a breakpoint is reached
     
-    typedef std::function<void(BreakPoint type, uint16_t address, uint16_t value)> CallbackBreakpoint;
+    typedef std::function<void(Breakpoint type, uint16_t address, uint16_t value)> CallbackBreakpoint;
     void setCallbackBreakpoint(CallbackBreakpoint callback);
         
 private:

@@ -68,13 +68,13 @@ public:
 
 		// address of 'credits' in memory discovered by using old school 'Game Genie' method of looking for byte that 
 		//   changed when number of credits was incremented / decremented
-		emulator.addBreakPoint(Emulator8080::BreakPoint::MemoryWrite, 8192 + 235);
+		emulator.addBreakpoint(Emulator8080::BreakPoint::MemoryWrite, 8192 + 235);
 
 		// PC where credits is incremented
-		emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x0038);
+		emulator.addBreakpoint(Emulator8080::BreakPoint::Opcode, 0x0038);
 
 		// PC where credits is decremented
-		emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x079b);
+		emulator.addBreakpoint(Emulator8080::BreakPoint::Opcode, 0x079b);
 # endif
 
 
@@ -82,28 +82,28 @@ public:
 		// debugging player scrolling left/right
 
 		// RunGameObjs
-		//emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x0248);
+		//emulator.addBreakpoint(Emulator8080::Breakpoint::Opcode, 0x0248);
 
 		// DrawShiftedSprited
-		//emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x1400);
+		//emulator.addBreakpoint(Emulator8080::Breakpoint::Opcode, 0x1400);
 
 		// MovePlayerRight
-		//emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x0381);
+		//emulator.addBreakpoint(Emulator8080::Breakpoint::Opcode, 0x0381);
 		
 		// PC where shift register is output
-		//emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x1474);
+		//emulator.addBreakpoint(Emulator8080::Breakpoint::Opcode, 0x1474);
 
 		// PC where Aliens are Counted
-		//emulator.addBreakPoint(Emulator8080::BreakPoint::Opcode, 0x1605);
+		//emulator.addBreakpoint(Emulator8080::Breakpoint::Opcode, 0x1605);
 # endif
 
 		// callback invoked when a breakpoint is reached
-		emulator.setCallbackBreakpoint([&](Emulator8080::BreakPoint type, uint16_t address, uint16_t value) {
+		emulator.setCallbackBreakpoint([&](Emulator8080::Breakpoint type, uint16_t address, uint16_t value) {
 			switch (type) {
-			case Emulator8080::BreakPoint::MemoryWrite:
+			case Emulator8080::Breakpoint::MemoryWrite:
 				printf("PC [0x%04x] Memory Write - address [0x%04x] - changing value from [%u] to [%u]\n", emulator.getState().pc, address, emulator.readMemory(address), value);
 				break;
-			case Emulator8080::BreakPoint::Opcode:
+			case Emulator8080::Breakpoint::Opcode:
 				printf("PC [0x%04x] Opcode\n", address);
 				break;
 			default:

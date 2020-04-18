@@ -1689,7 +1689,7 @@ void Emulator8080::step() {
 		case 0xF1:						// POP PSW
 		{
 			uint8_t flags = readMemory(state.sp);
-			state.cc = *reinterpret_cast<State::ConditionCodes*>(&flags);
+			state.cc = *reinterpret_cast<ConditionCodes*>(&flags);
 			state.a = readMemory(state.sp + 1);
 			state.sp += 2;
 
@@ -1812,7 +1812,7 @@ void Emulator8080::step() {
 
 	if (!breakpointsOpcode.empty() && (breakpointsOpcode.find(state.pc) != breakpointsOpcode.end())) {
 		if (callbackBreakpoint) {
-			callbackBreakpoint(BreakPoint::Opcode, state.pc, 0);
+			callbackBreakpoint(Breakpoint::Opcode, state.pc, 0);
 		}
 	}
 }
@@ -1865,7 +1865,7 @@ void Emulator8080::writeMemory(uint16_t address, uint8_t value) {
 	
 	if (!breakpointsMemoryWrite.empty() && (breakpointsMemoryWrite.find(address) != breakpointsMemoryWrite.end())) {
 		if (callbackBreakpoint) {
-			callbackBreakpoint(BreakPoint::MemoryWrite, address, value);
+			callbackBreakpoint(Breakpoint::MemoryWrite, address, value);
 		}
 	}
 	
@@ -1956,12 +1956,12 @@ const std::vector<uint8_t> Emulator8080::getVideoRam() const {
 	return video;
 }
 
-void Emulator8080::addBreakPoint(BreakPoint type, uint16_t address) {
+void Emulator8080::addBreakpoint(Breakpoint type, uint16_t address) {
 	switch (type) {
-	case BreakPoint::MemoryWrite:
+	case Breakpoint::MemoryWrite:
 		breakpointsMemoryWrite.insert(address);
 		break;
-	case BreakPoint::Opcode:
+	case Breakpoint::Opcode:
 		breakpointsOpcode.insert(address);
 		break;
 	}	
