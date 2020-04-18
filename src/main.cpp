@@ -414,7 +414,6 @@ private:
 		interruptNum = (interruptNum == 1) ? 2 : 1;
 	}
     
-    std::vector<uint8_t> rom;
 	cpu::CPU emulator;
 	memory::Memory memory;
 
