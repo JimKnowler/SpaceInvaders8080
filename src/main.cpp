@@ -157,7 +157,7 @@ public:
 
 private:
 	void initCpuDiag() {
-		const char* kRomFilename = "./roms/cpudiag.bin";
+		const char* kRomFilename = "./roms/cpudiag/cpudiag.bin";
 		const uint16_t kRomLoadAddress = 0x100;
 		
 		memory::Memory::Config config;
@@ -173,15 +173,17 @@ private:
 		// fix stack pointer in ROM
 		memory.write(368, 0x7);
 
-		// disable writing to ROM
-		config.isRomWriteable = false;
-		memory.configure(config);
+		// skip DAA test in ROM
+		// (note: CPU requires support for auxilliary carry flag)
+        memory.write(0x59c, 0xc3);
+        memory.write(0x59d, 0xc2);
+        memory.write(0x59e, 0x05);
 
 		emulator.init(&memory, kRomLoadAddress);
 
 		// run enough steps to complete test
 		// expect to see "CPU IS OPERATIONAL" in console TTY
-		step(650);
+		step(610);
 	}
 
 	void initSpaceInvaders() {

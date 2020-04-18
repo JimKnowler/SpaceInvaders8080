@@ -77,9 +77,11 @@ namespace memory {
 	}
 
 	void Memory::write(uint16_t address, uint8_t value) {
-		if (address < config.sizeRom) {
-			assert(!"unable to write to address in ROM");
-			return;
+		if (!config.isRomWriteable) {
+			if (address < config.sizeRom) {
+				assert(!"unable to write to address in ROM");
+				return;
+			}
 		}
 
 		memory[address] = value;		
