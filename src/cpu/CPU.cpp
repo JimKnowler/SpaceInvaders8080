@@ -236,7 +236,8 @@ namespace cpu {
 			case 0x1F:						// RAR
 			{
 				uint8_t bit0 = state.a & 1;
-				state.a = (state.a >> 1) | (bit0 << 7);
+				uint8_t bit7 = state.cc.cy;
+				state.a = (state.a >> 1) | (bit7 << 7);
 				state.cc.cy = bit0;
 				break;
 			}
@@ -1418,9 +1419,9 @@ namespace cpu {
 			}
 			case 0xD3:						// OUT D8 (special)
 			{
-				uint8_t data = readMemory(state.pc + 1);
+				uint8_t port = readMemory(state.pc + 1);
 				if (callbacks.out) {
-					callbacks.out(data, state.a);
+					callbacks.out(port, state.a);
 				}
 				opcodeSize = 2;
 				break;
