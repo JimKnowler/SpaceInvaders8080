@@ -114,7 +114,7 @@ public:
 			static const float kFrameDuration = 1.0f / 60.0f;
 			
 			// Space Invaders - vblank/vhalf interrupts
-			if (elapsedTime > kFrameDuration) {
+			if (elapsedTime > (kFrameDuration/2)) {
 				timeLastInterrupt = currentTime;
 				
 				emulator.interrupt(interruptNum);
