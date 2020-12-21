@@ -23,6 +23,9 @@ Emulate `Intel 8080` CPU + ` Taito Space Invaders` machine Hardware.
 - 8080 Chipset opcodes
   http://www.emulator101.com/reference/8080-by-opcode.html
 
+- 8080 Programmers Reference
+  https://altairclone.com/downloads/manuals/8080%20Programmers%20Manual.pdf
+
 ## CPU Diagnostics
 
 To run the 8080 cpu diagnostic tests, enable the macro '`CPUDIAG`' in `BuildOptions.h`.
@@ -78,6 +81,7 @@ Multiple breakpoints can be instantiated.
 # Status
 ## Progress
 
+- Space Invaders Game is fully playable!
 - Player is able to insert coins + start a game
 - Player is able to move left/right + fire
 - Aliens are able to animate, move left/right + fire
@@ -85,13 +89,10 @@ Multiple breakpoints can be instantiated.
 
 ## Issues
 
-- Player + alien horizontal movements appear incorrect
-  - unable to shift left/right by less than a byte?
-  - leaving a trail of corrupted pixels behind after moving
-    - this is affecting collision detection, which appears to be implemented on pixel values
-  - perhaps start by looking at the external shift register for issues
-- CPU emulation does not count cycles
+- CPU emulation is not cycle accurate
   - Not currently required for Space Invaders simulation
+  - Would be required
+  - Would be useful for optimisation (i.e. only simulate 'n' clock cycles per frame)
 
 ## More Debugging Ideas
 
