@@ -10,7 +10,7 @@ namespace {
 
     std::string makeOpcode(const char* szOpcode, const char* argsPrefix) {
         char buffer[64];
-        sprintf_s(buffer, "%-7s%s", szOpcode, argsPrefix);
+        sprintf(buffer, "%-7s%s", szOpcode, argsPrefix);
 
         std::string opcode = buffer;
 
@@ -19,7 +19,7 @@ namespace {
 
     std::string makeOpcodeD16(const char* szOpcode, const char* argsPrefix, uint8_t dataHigh, uint8_t dataLow) {
         char buffer[64];
-        sprintf_s(buffer, "%-7s%s$%02x%02x", szOpcode, argsPrefix, dataHigh, dataLow);
+        sprintf(buffer, "%-7s%s$%02x%02x", szOpcode, argsPrefix, dataHigh, dataLow);
 
         std::string opcode = buffer;
 
@@ -28,7 +28,7 @@ namespace {
 
     std::string makeOpcodeD8(const char* szOpcode, const char* argsPrefix, uint8_t data) {
         char buffer[64];
-        sprintf_s(buffer, "%-7s%s$%02x", szOpcode, argsPrefix, data);
+        sprintf(buffer, "%-7s%s$%02x", szOpcode, argsPrefix, data);
 
         std::string opcode = buffer;
 
