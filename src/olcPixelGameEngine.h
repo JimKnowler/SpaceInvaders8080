@@ -2758,7 +2758,7 @@ namespace olc
     glRenderContext_t glRenderContext = 0;
 #endif
 
-    bool bSync = false;
+//    bool bSync = false;
 
 #if defined(__linux__) || defined(__FreeBSD__)
     X11::Display* olc_Display = nullptr;
